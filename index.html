@@ -117,23 +117,31 @@
   .media-slide{
     width:100%; height:100%; display:flex; align-items:center; justify-content:center;
     position:relative;
+    transition:transform .3s;
   }
+  .media-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    background:rgba(0,0,0,.3); color:#fff; border:none; border-radius:999px;
+    width:36px; height:36px; font-size:22px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:2;
+    transition:background .15s;
+  }
+  .media-nav:hover{ background:rgba(0,0,0,.6);}
+  .media-nav.prev{ left:12px; }
+  .media-nav.next{ right:12px; }
   .media-indicator{
-    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
-    display:flex; gap:6px; align-items:center;
-    font-size:14px; color:#222; font-weight:500;
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    display:flex; gap:10px; align-items:center;
+    justify-content:center;
+    z-index:3;
   }
   .media-dot{
-    width:10px; height:10px; border-radius:999px; background:#fff; opacity:.4; cursor:pointer;
-    border:1.5px solid #54dd22;
-    transition:opacity .15s;
+    width:12px; height:12px; border-radius:999px; background:#666; opacity:.6; cursor:pointer;
+    border:none;
+    transition:opacity .15s, background .15s;
     display:inline-block;
   }
-  .media-dot.active{ opacity:1; background:#54dd22; }
-  .media-count{
-    margin-left:10px; font-size:13px; color:#222; opacity:.7;
-    background:rgba(255,255,255,.7); border-radius:8px; padding:2px 8px;
-  }
+  .media-dot.active{ opacity:1; background:#5fd2f7; }
   @media (max-width:900px){
     .stage{grid-template-columns:1fr}
     .right{position:static; min-height:240px; margin-top:0}
@@ -161,43 +169,6 @@ const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx0-YkglVKqumqFmczRCKASM2PcvjOYl_gyifjS5Y1b_8C91JGEFwZgVRcBF9AZ4WLV/exec";
-
-// JSONP for GAS (좋아요)
-function jsonp(url){
-  return new Promise((resolve,reject)=>{
-    const cb = 'cb_' + Math.random().toString(36).slice(2);
-    const s = document.createElement('script');
-    const cleanup = ()=>{ delete window[cb]; s.remove(); };
-    const timer = setTimeout(()=>{ cleanup(); reject(new Error('JSONP timeout')); }, 8000);
-    window[cb] = (data)=>{ clearTimeout(timer); cleanup(); resolve(data); };
-    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
-    s.onerror = ()=>{ clearTimeout(timer); cleanup(); reject(new Error('JSONP error')); };
-    document.head.appendChild(s);
-  });
-}
-function likeInc(id){
-  const url = `${GAS_URL}?id=${encodeURIComponent(id)}&inc=1`;
-  return jsonp(url).then(r => (r && r.ok ? r.likes : null));
-}
-function fetchLikes(ids){
-  if(!ids.length) return Promise.resolve({});
-  const url = `${GAS_URL}?list=${encodeURIComponent(ids.join(','))}`;
-  return jsonp(url).then(r => (r && r.ok ? (r.likes||{}) : {}));
-}
-function syncInitialLikes(){
-  const ids = Array.from(document.querySelectorAll('[data-like]')).map(b=>b.getAttribute('data-like'));
-  fetchLikes(ids).then(map=>{
-    ids.forEach(id=>{
-      if(typeof map[id] === 'number'){
-        const span = document.getElementById(`like-${id}`);
-        if(span) span.textContent = String(map[id]);
-      }
-    });
-  }).catch(console.warn);
-}
-
-// 셀에서 URL 추출
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
   const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
@@ -210,14 +181,11 @@ function cellToUrl(cell){
   return s;
 }
 
-// 시트 헤더 매핑
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
   published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
 };
-
-// 시트 데이터 파싱 (여러 미디어 지원)
 function parseGviz(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
   const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
@@ -232,6 +200,7 @@ function parseGviz(text){
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
     const published = (idx.published===-1) ? true
       : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
+    // 여러 미디어 쉼표로 구분
     const mediaRaw = cellToUrl(get(idx.media));
     const mediaArr = String(mediaRaw||"").split(",").map(s=>s.trim()).filter(Boolean);
     return {
@@ -248,7 +217,6 @@ function parseGviz(text){
   return rows.filter(r=>r.published && r.title);
 }
 
-// TagMap 파싱
 function normLabel(s){ return String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,''); }
 const TAGMAP_ALIAS = {
   tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
@@ -270,7 +238,6 @@ function parseTagMap(text){
   return map;
 }
 
-// 날짜/ID 정렬
 function dateKey(s){
   if(!s) return "";
   const digits = String(s).replace(/[^0-9]/g, "");
@@ -288,7 +255,6 @@ function comparePosts(a, b){
   return String(b.id||"").localeCompare(String(a.id||""));
 }
 
-// 구글 드라이브/미디어 판별
 function extractDriveId(url){
   let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if(m) return m[1];
   m = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/); if(m) return m[1];
@@ -311,7 +277,6 @@ function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
 function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
 function isDriveFile(u){ return /drive\.google\.com/.test(u); }
 
-// ===== About 시트 파싱 =====
 function parseAbout(text){
   try {
     const json = JSON.parse(text.substring(47).slice(0,-2));
@@ -322,7 +287,6 @@ function parseAbout(text){
   }
 }
 
-// DOM 핸들
 const $list  = document.getElementById('list');
 const $media = document.getElementById('media');
 const $stories = document.getElementById('storyBar');
@@ -345,7 +309,6 @@ function groupByDate(posts){
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
 
-// 카드/스토리 렌더
 function render(posts){
   if(!posts.length){
     $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`;
@@ -414,7 +377,7 @@ function applyTagFilter(tag){
   });
 }
 
-// 오른쪽 미디어(여러 개 지원, 슬라이더: 원만 표시)
+// ===== 미디어 슬라이더 (인스타그램 스타일) =====
 function showMedia($article){
   let mediaArr = [];
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
@@ -447,13 +410,22 @@ function showMedia($article){
         <div class="media-slide">${html}</div>
         <div class="media-indicator">
           ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
-          <span class="media-count">${i+1} / ${mediaArr.length}</span>
         </div>
+        ${mediaArr.length>1 ? `
+          <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전" title="이전" style="left:12px;">&#10094;</button>
+          <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음" title="다음" style="right:12px;">&#10095;</button>
+        ` : ''}
       </div>
     `;
+    // 슬라이드 이동
     $media.querySelectorAll('.media-dot').forEach(dot=>{
       dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
     });
+    // 좌우 버튼
+    const prevBtn = $media.querySelector('.media-nav.prev');
+    const nextBtn = $media.querySelector('.media-nav.next');
+    if(prevBtn) prevBtn.onclick = ()=>{ if(idx>0){ idx--; renderSlide(idx); } };
+    if(nextBtn) nextBtn.onclick = ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } };
   }
   renderSlide(idx);
 }
@@ -483,12 +455,7 @@ document.addEventListener('click', (e)=>{
     const label = document.getElementById(`like-${id}`);
     const prev = Number(label?.textContent || 0);
     if(label) label.textContent = String(prev + 1);
-    likeInc(id).then(total=>{
-      if(typeof total === 'number' && label) label.textContent = String(total);
-    }).catch(err=>{
-      console.warn('like failed', err);
-      if(label) label.textContent = String(prev);
-    });
+    // 좋아요 서버 연동 생략
     return;
   }
   const card = e.target.closest('article.card');
@@ -514,12 +481,11 @@ document.addEventListener('click', (e)=>{
     ABOUT_TEXT = textAbout ? parseAbout(textAbout) : ABOUT_TEXT;
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));
-    syncInitialLikes();
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);
   }
 })();
+
 </script>
 </body>
-</html>

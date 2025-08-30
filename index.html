@@ -50,50 +50,44 @@
   .stories{
     display:flex; gap:16px; padding:12px 16px 18px; align-items:center; overflow-x:auto;
   }
-  /* 동그라미 태그: 배경 이미지를 원형으로 표시 */
+
+  /* 동그라미 태그: 배경 이미지를 원형으로 표시 + 오버레이 */
   .story{
     width:64px; height:64px; flex:0 0 auto; border-radius:999px;
     background:#bfbfbf center/cover no-repeat;        /* 기본(이미지 없을 때) */
     border:2px solid transparent; cursor:pointer; position:relative;
     outline:none;
   }
-
-/* 원형 이미지 위 오버레이(딤) + 중앙 텍스트 */
-.story{ position:relative; }
-
-/* 딤 레이어 */
-.story::before{
-  content:"";
-  position:absolute; inset:0;
-  background:rgba(0,0,0,.45);
-  border-radius:inherit;
-  opacity:0;
-  transition:opacity .15s ease;
-  pointer-events:none;
-}
-
-/* 중앙 텍스트 */
-.story::after{
-  content: attr(data-label);
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size:12px; font-weight:600; letter-spacing:.02em;
-  text-align:center; padding:0 8px;
-  text-shadow:0 1px 2px rgba(0,0,0,.4);
-  opacity:0; transform:scale(.98);
-  transition:opacity .15s ease, transform .15s ease;
-  pointer-events:none;
-}
-
-/* 호버/포커스/액티브 때 표시 */
-.story:hover::before, .story:focus-visible::before, .story:active::before{ opacity:1; }
-.story:hover::after,  .story:focus-visible::after,  .story:active::after { opacity:1; transform:scale(1); }
-
   /* 인라인 style="--img:url('...')" 로 이미지 주입 */
   .story[data-img="1"]{ background-image:var(--img); }
-  /* 활성/호버 효과 */
-  .story:hover, .story.active{box-shadow:0 0 0 2px #1112 inset; }
-  /* 접근성용 숨김 텍스트 */
+
+  /* 딤 레이어 */
+  .story::before{
+    content:"";
+    position:absolute; inset:0;
+    background:rgba(0,0,0,.45);
+    border-radius:inherit;
+    opacity:0;
+    transition:opacity .15s ease;
+    pointer-events:none;
+  }
+  /* 중앙 텍스트 */
+  .story::after{
+    content: attr(data-label);
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:12px; font-weight:600; letter-spacing:.02em;
+    text-align:center; padding:0 8px;
+    text-shadow:0 1px 2px rgba(0,0,0,.4);
+    opacity:0; transform:scale(.98);
+    transition:opacity .15s ease, transform .15s ease;
+    pointer-events:none;
+  }
+  /* 호버/포커스/액티브 때 표시 */
+  .story:hover::before, .story:focus-visible::before, .story:active::before{ opacity:1; }
+  .story:hover::after,  .story:focus-visible::after,  .story:active::after { opacity:1; transform:scale(1); }
+
+  /* 접근성 숨김 텍스트 */
   .sr-only{ position:absolute; clip:rect(0,0,0,0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
 
   /* 날짜 */
@@ -134,23 +128,19 @@
 
 <script>
 /* ===== 시트 연결 설정 ===== */
-const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";  // ← 스프레드시트 ID로 교체
+const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";  // ← 스프레드시트 ID
 const POSTS_SHEET  = "";            // 본문 탭(없으면 첫 탭)
 const TAGMAP_SHEET = "TagMap";      // 태그-이미지 매핑 탭 이름
 
-const GVIZ_BASE     = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
-const GVIZ_POSTS    = GVIZ_BASE(POSTS_SHEET);
-const GVIZ_TAGMAP   = GVIZ_BASE(TAGMAP_SHEET);
+const GVIZ_BASE   = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
+const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
+const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 
 /* ===== 데이터 파싱(한국어/영어 헤더 자동 인식) ===== */
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
   published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
-};
-const tagMapHeader = {
-  tag: ['tag','tags','태그','name','label'],
-  img: ['imageurl','image','url','이미지','링크','이미지url']
 };
 
 function parseGviz(text){
@@ -184,14 +174,23 @@ function parseGviz(text){
   return rows.filter(r=>r.published && r.title);
 }
 
+/* === TagMap 파싱 (헤더 정규화 + 폴백) === */
+function normLabel(s){
+  return String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,'');
+}
+const TAGMAP_ALIAS = {
+  tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
+  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지url','이미지사진','photo','icon'].map(normLabel))
+};
 function parseTagMap(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
-  const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
-  const colTag = labels.findIndex(l=>tagMapHeader.tag.includes(l));
-  const colImg = labels.findIndex(l=>tagMapHeader.img.includes(l));
-  const map = new Map();
-  if(colTag===-1 || colImg===-1) return map;
+  const labels = json.table.cols.map(c=>normLabel(c.label));
+  let colTag = labels.findIndex(l=> TAGMAP_ALIAS.tag.has(l));
+  let colImg = labels.findIndex(l=> TAGMAP_ALIAS.img.has(l));
+  if(colTag === -1) colTag = 0; // 폴백: 1열
+  if(colImg === -1) colImg = 1; // 폴백: 2열
 
+  const map = new Map();
   json.table.rows.forEach(r=>{
     const t = (r.c[colTag]?.v ?? r.c[colTag]?.f ?? "").toString().trim();
     const u = (r.c[colImg]?.v ?? r.c[colImg]?.f ?? "").toString().trim();
@@ -200,6 +199,27 @@ function parseTagMap(text){
     }
   });
   return map;
+}
+
+/* ===== 정렬 규칙: 날짜 최신 ↓, 같은 날짜면 id 숫자 큰 값 ↓ ===== */
+function dateKey(s){
+  if(!s) return "";
+  const digits = String(s).replace(/[^0-9]/g, "");
+  if(!digits) return "";
+  return digits.padEnd(14, "0").slice(0, 14);
+}
+function idNum(id){
+  const m = String(id||"").match(/(\d+)/g);
+  return m ? Number(m[m.length-1]) : null;
+}
+function comparePosts(a, b){
+  const da = dateKey(a.date), db = dateKey(b.date);
+  if(da !== db) return db.localeCompare(da);  // 날짜 내림차순
+  const ia = idNum(a.id), ib = idNum(b.id);
+  if(ia != null && ib != null) return ib - ia; // 숫자 id 내림차순
+  if(ia != null) return -1;
+  if(ib != null) return  1;
+  return String(b.id||"").localeCompare(String(a.id||"")); // 문자열 id 내림차순
 }
 
 /* ===== 렌더 ===== */
@@ -221,7 +241,8 @@ function groupByDate(posts){
     if(!map.has(key)) map.set(key, []);
     map.get(key).push(p);
   });
-  return Array.from(map.entries()).sort((a,b)=> (b[0]||"").localeCompare(a[0]||""));
+  return Array.from(map.entries())
+    .sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0]))); // 날짜 그룹 최신순
 }
 
 function render(posts){
@@ -257,8 +278,9 @@ function renderStories(allTags){
     const key = t.toLowerCase();
     const img = TAGMAP.get(key);
     const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
+    const tip = img ? `${t} • ${img}` : t; // 빠른 진단용
     return `
-      <button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}" title="${t}">
+      <button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}" title="${tip}">
         <span class="sr-only">${t}</span>
       </button>
     `;
@@ -321,12 +343,11 @@ document.addEventListener('click', e=>{
       rTag && rTag.ok ? rTag.text() : Promise.resolve(null)
     ]);
 
-    const rows = parseGviz(textPosts).sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-    if(textTag){
-      TAGMAP = parseTagMap(textTag);
-    }else{
-      TAGMAP = new Map(); // 없으면 빈 맵
-    }
+    // 정렬: 날짜 최신 ↓, 동일 날짜면 id 큰 값 ↓
+    const rows = parseGviz(textPosts).sort(comparePosts);
+
+    // TagMap 파싱
+    TAGMAP = textTag ? parseTagMap(textTag) : new Map();
 
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));

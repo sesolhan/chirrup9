@@ -20,11 +20,11 @@
     --font-sans: 'JoseonGulim', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                  'Apple SD Gothic Neo','Noto Sans KR', sans-serif;
     --chip-border:#6b7280;  /* 기본 테두리/텍스트 */
-    --accent:#54dd22;       /* 호버 시 색상 */
+    --accent:#54dd22;       /* 호버 시 색상 (좋아요/닫기 버튼 등) */
   }
   *{box-sizing:border-box}
 
-  html, body { height:100%; overscroll-behavior: none; }   /* ← 반동 제거 */
+  html, body { height:100%; overscroll-behavior: none; }   /* 반동 제거 */
   body{
     margin:0;
     background:transparent;
@@ -46,7 +46,7 @@
     padding:30px;
     min-height:100vh;
     position:relative;
-    overscroll-behavior: contain;    /* ← 영역 밖 전파 방지 */
+    overscroll-behavior: contain;
   }
 
   h1,h2,h3,.about-link,.date,.pill,.story::after { font-family: var(--font-sans); }
@@ -130,11 +130,16 @@
     background:#e6e6e6;
     transition:color .15s ease, border-color .15s ease;
   }
-  .pill:hover, .pill:focus-visible{
+  /* 태그 칩은 호버 색변경 없음 (요청사항) */
+  /* .pill:hover 없음 */
+
+  /* 좋아요 버튼만 호버 시 포커스 색 변경 */
+  .like.pill{ cursor:pointer; }
+  .like.pill:hover,
+  .like.pill:focus-visible{
     color:var(--accent);
     border-color:var(--accent);
   }
-  .like.pill{ cursor:pointer; }
 
   .content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
 
@@ -175,6 +180,21 @@
   }
   .media-dot.active{ opacity:1; background:#54dd22; }
 
+  /* 닫기(X) 버튼: 데스크톱/모바일 공통 스타일 */
+  .media-close{
+    position:absolute; top:10px; right:12px;
+    width:36px; height:36px; line-height:34px; text-align:center;
+    border-radius:999px; border:1px dashed var(--chip-border);
+    background:#e6e6e6; color:var(--chip-border);
+    font-size:20px; cursor:pointer;
+    transition:color .15s, border-color .15s;
+    z-index:1000;
+    display:none; /* 필요할 때만 표시 */
+  }
+  .media-close:hover, .media-close:focus-visible{
+    color:var(--accent); border-color:var(--accent);
+  }
+
   /* ▼ 모바일: 미디어를 모달로 표시 */
   @media (max-width:900px){
     .stage{grid-template-columns:1fr}
@@ -185,20 +205,8 @@
       padding:14px;
     }
     .right.open{ display:flex; }          /* JS로 토글 */
-    .media-close{
-      position:absolute; top:10px; right:12px;
-      width:36px; height:36px; line-height:34px; text-align:center;
-      border-radius:999px; border:1px dashed var(--chip-border);
-      background:#e6e6e6; color:var(--chip-border);
-      font-size:20px; cursor:pointer;
-      transition:color .15s, border-color .15s;
-      z-index:1000;
-    }
-    .media-close:hover, .media-close:focus-visible{
-      color:var(--accent); border-color:var(--accent);
-    }
     .media-slider{max-width:100vw;}
-    body.modal-open{ overflow:hidden; }    /* 모달 열릴 때 배경 스크롤 금지 */
+    body.modal-open{ overflow:hidden; }   /* 모달 열릴 때 배경 스크롤 금지 */
   }
 </style>
 </head>
@@ -212,7 +220,7 @@
 
     <!-- 우측 미디어(데스크톱: 고정 컬럼 / 모바일: 모달) -->
     <aside class="right" id="media" aria-modal="true" role="dialog">
-      <button id="mediaClose" class="media-close" aria-label="닫기" title="닫기" style="display:none">✕</button>
+      <button id="mediaClose" class="media-close" aria-label="닫기" title="닫기">✕</button>
       <div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>
     </aside>
   </main>
@@ -228,24 +236,22 @@ const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-/* ===== 홈 진입 시 기본 재생 유튜브 ===== */
-const DEFAULT_YT_ID = "Vi2TIV3rYzc"; // 기본 영상 ID
-let defaultShown = false;
-
+/* ===== DOM 핸들 ===== */
 const $list     = document.getElementById('list');
 const $media    = document.getElementById('media');
 const $closeBtn = document.getElementById('mediaClose');
 const $stories  = document.getElementById('storyBar');
 const aboutBtn  = document.getElementById('aboutBtn');
 
+/* 상태 */
 let TAGMAP = new Map();
 let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
+let PREV_MEDIA_HTML = null;   // About 등으로 바꾸기 전 상태 저장
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
-/* ===== 반동 추가 방지(대부분 브라우저는 CSS로 해결, 여기서는 보조만) ===== */
+/* ===== iOS 보조: 모달 열렸을 때 배경 터치 스크롤 방지 ===== */
 document.addEventListener('touchmove', (e)=>{
-  // 열린 모달 바깥의 터치 스크롤 방지 (iOS 보조)
   if (document.body.classList.contains('modal-open') && !e.target.closest('#media')) {
     e.preventDefault();
   }
@@ -256,15 +262,18 @@ function openMediaModal(){
   if(!isMobile()) return;
   $media.classList.add('open');
   document.body.classList.add('modal-open');
-  $closeBtn.style.display = 'block';
-  // 포커스 이동 (접근성)
-  $closeBtn.focus({preventScroll:true});
+  showCloseButton(true);
 }
 function closeMediaModal(){
   if(!isMobile()) return;
   $media.classList.remove('open');
   document.body.classList.remove('modal-open');
-  $closeBtn.style.display = 'none';
+  showCloseButton(false);
+}
+
+/* X 버튼 표시/숨김 (뷰포트 무관) */
+function showCloseButton(show){
+  $closeBtn.style.display = show ? 'block' : 'none';
 }
 
 /* ESC로 모달 닫기 */
@@ -273,31 +282,20 @@ document.addEventListener('keydown', (e)=>{
     closeMediaModal();
   }
 });
-/* 닫기 버튼 */
-$closeBtn.addEventListener('click', closeMediaModal);
-
-/* 외곽 클릭으로 닫기(모바일만) */
-$media.addEventListener('click', (e)=>{
-  if(isMobile() && e.target === $media) closeMediaModal();
+/* 닫기 버튼 동작: 모바일은 모달 닫기, 데스크톱은 이전 상태 복원 */
+$closeBtn.addEventListener('click', ()=>{
+  if(isMobile()){
+    closeMediaModal();
+  }else{
+    if(PREV_MEDIA_HTML){
+      $media.innerHTML = PREV_MEDIA_HTML;
+      // 복원 후 닫기 버튼 노출 상태 다시 잡아주기
+      const btn = document.getElementById('mediaClose');
+      if(btn) btn.addEventListener('click', ()=> showCloseButton(false));
+    }
+    showCloseButton(false);
+  }
 });
-
-/* ===== 기본 유튜브 표시 ===== */
-function showDefaultYouTube(){
-  const embed = `https://www.youtube-nocookie.com/embed/${DEFAULT_YT_ID}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
-  const html = `
-    <div class="media-slider">
-      <div class="media-slide">
-        <iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
-          src="${embed}"
-          allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
-          title="Intro video"></iframe>
-      </div>
-      <div class="media-indicator"><span class="media-dot active"></span></div>
-    </div>`;
-  $media.innerHTML = html + $media.innerHTML; // 닫기 버튼 유지
-  defaultShown = true;
-  if(isMobile()) openMediaModal();
-}
 
 /* ===== 유틸: 셀에서 URL들 추출 ===== */
 function cellToUrl(cell){
@@ -498,10 +496,9 @@ function render(posts){
     `;
   }).join("");
 
-  if(!defaultShown){
-    const first = document.querySelector('article.card');
-    if(first) showMedia(first);
-  }
+  /* 기본 자동 영상은 삭제 요청 → 첫 카드 미디어만 자동 노출 유지(원치 않으면 아래 두 줄 삭제) */
+  const first = document.querySelector('article.card');
+  if(first) showMedia(first);
 }
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
@@ -543,10 +540,16 @@ function showMedia($article){
   let mediaArr = [];
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
   catch { mediaArr = []; }
+
+  // 현재 상태 백업(About 복원용)
+  PREV_MEDIA_HTML = $media.innerHTML;
+
   if(!mediaArr.length){
     $media.querySelector('.placeholder')?.remove?.();
     $media.insertAdjacentHTML('beforeend', `<div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>`);
     if(isMobile()) openMediaModal();
+    // 미디어 표시 시 X는 기본 숨김(모바일 모달일 때는 open에서 보임)
+    if(!isMobile()) showCloseButton(false);
     return;
   }
 
@@ -575,7 +578,7 @@ function showMedia($article){
     }
 
     // 닫기 버튼 유지하며 교체
-    const closeBtnHTML = $closeBtn.outerHTML; // 보존
+    const closeBtnHTML = $closeBtn.outerHTML;
     $media.innerHTML = `
       ${closeBtnHTML}
       <div class="media-slider">
@@ -589,20 +592,35 @@ function showMedia($article){
         ` : ''}
       </div>
     `;
-    // 새로 삽입된 닫기 버튼에 이벤트 재연결
-    document.getElementById('mediaClose').addEventListener('click', closeMediaModal);
+
+    // 새 닫기 버튼에 이벤트 재연결
+    const btn = document.getElementById('mediaClose');
+    btn.addEventListener('click', ()=>{
+      if(isMobile()){
+        closeMediaModal();
+      }else{
+        if(PREV_MEDIA_HTML){
+          $media.innerHTML = PREV_MEDIA_HTML;
+          document.getElementById('mediaClose')?.addEventListener('click', ()=> showCloseButton(false));
+        }
+        showCloseButton(false);
+      }
+    });
+
+    // 모바일이면 모달 열고 X 보이기
     if(isMobile()){
-      document.getElementById('mediaClose').style.display = 'block';
       openMediaModal();
+    }else{
+      // 데스크톱에서 일반 콘텐츠는 X 감춤 (요청은 About에 X, 일반 콘텐츠는 필요시만)
+      showCloseButton(false);
     }
 
+    // 네비게이션
     $media.querySelectorAll('.media-dot').forEach(dot=>{
       dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
     });
-    const prevBtn = $media.querySelector('.media-nav.prev');
-    const nextBtn = $media.querySelector('.media-nav.next');
-    if(prevBtn) prevBtn.onclick = ()=>{ if(idx>0){ idx--; renderSlide(idx); } };
-    if(nextBtn) nextBtn.onclick = ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } };
+    $media.querySelector('.media-nav.prev')?.addEventListener('click', ()=>{ if(idx>0){ idx--; renderSlide(idx); } });
+    $media.querySelector('.media-nav.next')?.addEventListener('click', ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } });
   }
 
   renderSlide(idx);
@@ -612,12 +630,30 @@ function showMedia($article){
 aboutBtn.addEventListener('mouseenter', () => { aboutBtn.style.borderBottomColor = "#111827"; });
 aboutBtn.addEventListener('mouseleave', () => { aboutBtn.style.borderBottomColor = "transparent"; });
 aboutBtn.addEventListener('click', () => {
+  // 현재 미디어 상태 백업
+  PREV_MEDIA_HTML = $media.innerHTML;
+
+  // About 내용 표시
   const closeBtnHTML = $closeBtn.outerHTML;
   $media.innerHTML = `${closeBtnHTML}
     <div style="padding:32px 24px; font-size:18px; color:#222; background:#fff; border-radius:16px; max-width:600px; margin:auto; white-space:pre-line;">
       ${ABOUT_TEXT}
     </div>`;
-  document.getElementById('mediaClose').addEventListener('click', closeMediaModal);
+
+  // 닫기 버튼: 데스크톱에서도 표시 & 동작, 모바일은 모달 닫기
+  const btn = document.getElementById('mediaClose');
+  btn.addEventListener('click', ()=>{
+    if(isMobile()){
+      closeMediaModal();
+    }else{
+      if(PREV_MEDIA_HTML){
+        $media.innerHTML = PREV_MEDIA_HTML;
+        document.getElementById('mediaClose')?.addEventListener('click', ()=> showCloseButton(false));
+      }
+      showCloseButton(false);
+    }
+  });
+  showCloseButton(true);     // 데스크톱에서도 X 표시
   if(isMobile()) openMediaModal();
 });
 aboutBtn.addEventListener('keydown', (e) => { if(e.key === "Enter" || e.key === " "){ aboutBtn.click(); } });
@@ -635,13 +671,10 @@ document.addEventListener('click', (e)=>{
   const card = e.target.closest('article.card');
   if(card){
     showMedia(card);
-    defaultShown = false;
   }
 });
 
-/* ===== 초기 로드 ===== */
-showDefaultYouTube();  // 홈 진입 시 기본 영상 표시(모바일은 모달로 오픈)
-
+/* ===== 데이터 로드 ===== */
 (async function(){
   try{
     const [rPosts, rTag, rAbout] = await Promise.all([
@@ -669,10 +702,10 @@ showDefaultYouTube();  // 홈 진입 시 기본 영상 표시(모바일은 모�
 /* 리사이즈 시 모달 상태 정리 (데스크톱으로 넓어졌을 때) */
 window.addEventListener('resize', ()=>{
   if(!isMobile()){
-    // 데스크톱에서는 모달 클래스/스크롤 잠금 제거, 닫기버튼 숨김
     $media.classList.remove('open');
     document.body.classList.remove('modal-open');
-    $closeBtn.style.display = 'none';
+    // 데스크톱 기본으로는 X 숨김
+    showCloseButton(false);
   }
 });
 </script>

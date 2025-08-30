@@ -38,7 +38,7 @@
 
   /* 오른쪽 미디어 */
   .right{
-    background:#7ce84e;
+    background:#54dd22;
     color:#fff;
     min-height:100vh;
     display:flex; align-items:center; justify-content:center;
@@ -53,22 +53,20 @@
 
   /* 동그라미 태그: 배경 이미지를 원형으로 표시 + 오버레이 */
   .story{
-    --ring: 2px;                     /* 테두리 두께 변수(딤 inset에 사용) */
     width:64px; height:64px; flex:0 0 auto; border-radius:999px;
-    background:#bfbfbf center/cover no-repeat;        /* 기본(이미지 없을 때) */
-    border:var(--ring) solid transparent; cursor:pointer; position:relative;
-    outline:none;
-    overflow:hidden;                  /* 라운드 영역로 오버레이를 정확히 클립 */
+    background:#bfbfbf center/cover no-repeat; /* 기본(이미지 없을 때) */
+    cursor:pointer; position:relative; outline:none;
+    overflow:hidden; /* 오버레이를 원형으로 정확히 클립 */
   }
   /* 인라인 style="--img:url('...')" 로 이미지 주입 */
   .story[data-img="1"]{ background-image:var(--img); }
 
-  /* 딤 레이어: 원형 전체(테두리 포함) 덮기 */
+  /* 딤 레이어: 원형 전체를 정확히 덮기 */
   .story::before{
     content:"";
-    position:absolute; inset: calc(var(--ring) * -1);
+    position:absolute; inset:0;           /* 테두리 포함 영역 전체 */
     border-radius:inherit;
-    box-shadow: inset 0 0 0 100vmax rgba(0,0,0,.45);
+    background:rgba(0,0,0,.45);
     opacity:0; transition:opacity .15s ease;
     pointer-events:none;
   }
@@ -84,7 +82,7 @@
     transition:opacity .15s ease, transform .15s ease;
     pointer-events:none;
   }
-  /* 호버/포커스/액티브 때 표시 */
+  /* 호버/포커스/액티브 때 표시(딤+텍스트) */
   .story:hover::before, .story:focus-visible::before, .story:active::before{ opacity:1; }
   .story:hover::after,  .story:focus-visible::after,  .story:active::after { opacity:1; transform:scale(1); }
 
@@ -94,7 +92,7 @@
   /* 날짜 */
   .date{margin:18px 0 8px; font-weight:700}
 
-  /* 날짜 그룹 래퍼(필터 시 전체 숨김용) */
+  /* 날짜 그룹 래퍼(필터 시 통으로 숨김) */
   .group{ margin-bottom:12px; }
 
   /* 카드 */
@@ -161,255 +159,4 @@ function parseGviz(text){
   };
   const rows = json.table.rows.map(r=>{
     const get = i => (i===null? "" : (r.c[i]?.f ?? r.c[i]?.v ?? ""));
-    const pubRaw = get(idx.published);
-    const published = (idx.published===null) ? true
-      : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
-    return {
-      id:String(get(idx.id)||"").trim(),
-      title:String(get(idx.title)||"").trim(),
-      body:String(get(idx.body)||"").trim(),
-      tags:String(get(idx.tags)||"").split(",").map(s=>s.trim()).filter(Boolean),
-      likes:Number(get(idx.likes)||0),
-      date:String(get(idx.date)||"").trim(),
-      media:String(get(idx.media)||"").trim(),
-      published
-    };
-  });
-  return rows.filter(r=>r.published && r.title);
-}
-
-/* === TagMap 파싱 (헤더 정규화 + 폴백) === */
-function normLabel(s){
-  return String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,'');
-}
-const TAGMAP_ALIAS = {
-  tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
-  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(normLabel))
-};
-function parseTagMap(text){
-  const json = JSON.parse(text.substring(47).slice(0,-2));
-  const labels = json.table.cols.map(c=>normLabel(c.label));
-  let colTag = labels.findIndex(l=> TAGMAP_ALIAS.tag.has(l));
-  let colImg = labels.findIndex(l=> TAGMAP_ALIAS.img.has(l));
-  if(colTag === -1) colTag = 0; // 폴백: 1열
-  if(colImg === -1) colImg = 1; // 폴백: 2열
-
-  const map = new Map();
-  json.table.rows.forEach(r=>{
-    const t = (r.c[colTag]?.v ?? r.c[colTag]?.f ?? "").toString().trim();
-    const u = (r.c[colImg]?.v ?? r.c[colImg]?.f ?? "").toString().trim();
-    if(t && u){
-      map.set(t.toLowerCase(), u);
-    }
-  });
-  return map;
-}
-
-/* ===== 정렬 규칙: 날짜 최신 ↓, 같은 날짜면 id 숫자 큰 값 ↓ ===== */
-function dateKey(s){
-  if(!s) return "";
-  const digits = String(s).replace(/[^0-9]/g, "");
-  if(!digits) return "";
-  return digits.padEnd(14, "0").slice(0, 14);
-}
-function idNum(id){
-  const m = String(id||"").match(/(\d+)/g);
-  return m ? Number(m[m.length-1]) : null;
-}
-function comparePosts(a, b){
-  const da = dateKey(a.date), db = dateKey(b.date);
-  if(da !== db) return db.localeCompare(da);  // 날짜 내림차순
-  const ia = idNum(a.id), ib = idNum(b.id);
-  if(ia != null && ib != null) return ib - ia; // 숫자 id 내림차순
-  if(ia != null) return -1;
-  if(ib != null) return  1;
-  return String(b.id||"").localeCompare(String(a.id||"")); // 문자열 id 내림차순
-}
-
-/* ===== 구글 드라이브 이미지 링크 → 직접 표시 URL 변환 ===== */
-function normalizeMediaUrl(raw){
-  const url = String(raw||"").trim();
-  if(!url) return "";
-
-  // 이미 uc 링크면 그대로
-  if(/\/uc(\?|\/)/.test(url)) return url;
-
-  // /file/d/<ID>/... 패턴
-  const m1 = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-  if(m1 && m1[1]) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
-
-  // open?id=<ID> 패턴
-  const m2 = url.match(/[?&]id=([^&]+)/);
-  if(/drive\.google\.com/.test(url) && m2 && m2[1]) {
-    return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
-  }
-
-  // docs.google.com/uc?id=<ID> 등은 그대로
-  if(/docs\.google\.com\/uc/.test(url)) return url;
-
-  return url; // 기타는 원본 반환
-}
-
-function isYouTube(u){ return /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u); }
-function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
-function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
-
-/* ===== 렌더 ===== */
-const $list  = document.getElementById('list');
-const $media = document.getElementById('media');
-const $stories = document.getElementById('storyBar');
-
-let TAGMAP = new Map(); // lowerCase 태그 → 이미지 URL
-
-function formatKDate(s){
-  const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if(!m) return s || "날짜";
-  return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
-}
-function groupByDate(posts){
-  const map = new Map();
-  posts.forEach(p=>{
-    const key = p.date || "날짜";
-    if(!map.has(key)) map.set(key, []);
-    map.get(key).push(p);
-  });
-  return Array.from(map.entries())
-    .sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0]))); // 날짜 그룹 최신순
-}
-
-function render(posts){
-  if(!posts.length){ $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`; return; }
-
-  const groups = groupByDate(posts);
-  $list.innerHTML = groups.map(([date, items])=>{
-    const cards = items.map(p=>{
-      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
-      const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-      return `
-        <article class="card" data-id="${pid}" data-media="${encodeURIComponent(p.media)}" data-tags="${p.tags.join(',')}">
-          <h2>${p.title}</h2>
-          <div class="meta">
-            <span class="pill">좋아요 ${p.likes ?? 0}</span>
-            <span class="pills">${tags}</span>
-          </div>
-          <div class="content">${p.body}</div>
-        </article>
-      `;
-    }).join("");
-    return `
-      <section class="group" data-date="${date}">
-        <div class="date">${formatKDate(date)}</div>
-        ${cards}
-      </section>
-    `;
-  }).join("");
-
-  // 초기 미디어: 첫 카드
-  const first = document.querySelector('article.card');
-  if(first) showMedia(first);
-}
-
-function renderStories(allTags){
-  const tags = ['전체', ...Array.from(allTags).sort()];
-  $stories.innerHTML = tags.map(t=>{
-    const key = t.toLowerCase();
-    const img = TAGMAP.get(key);
-    const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
-    const tip = img ? `${t} • ${img}` : t; // 빠른 진단용
-    return `
-      <button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}" title="${tip}">
-        <span class="sr-only">${t}</span>
-      </button>
-    `;
-  }).join('');
-
-  const first = $stories.querySelector('[data-filter="전체"]');
-  if(first) first.classList.add('active');
-
-  $stories.querySelectorAll('.story').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const tag = btn.getAttribute('data-filter');
-      applyTagFilter(tag === '전체' ? null : tag);
-    });
-  });
-}
-
-function applyTagFilter(tag){
-  // 1) 카드 표시/숨김
-  document.querySelectorAll('#list article.card').forEach(a=>{
-    const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
-    const show = (!tag || tag==='전체' || tags.includes(tag));
-    a.style.display = show ? '' : 'none';
-  });
-
-  // 2) 날짜 그룹 단위로, 보일 카드가 없으면 그룹 자체 숨김
-  document.querySelectorAll('#list .group').forEach(g=>{
-    const anyVisible = Array.from(g.querySelectorAll('article.card')).some(a => a.style.display !== 'none');
-    g.style.display = anyVisible ? '' : 'none';
-  });
-}
-
-/* ===== 미디어 표시(오른쪽) ===== */
-function showMedia($article){
-  let url = decodeURIComponent($article.getAttribute('data-media')||"");
-  if(!url){ $media.innerHTML = `<div class="placeholder">미디어</div>`; return; }
-
-  // 1) 구글 드라이브 공유 링크 정규화
-  url = normalizeMediaUrl(url);
-
-  if(isYouTube(url)){
-    const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
-    $media.innerHTML = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
-      src="https://www.youtube-nocookie.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-  }else if(isVideo(url)){
-    $media.innerHTML = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
-  }else if(isImageExt(url) || /drive\.google\.com\/uc/.test(url)){
-    /* 이미지 확장자 or 드라이브 uc 링크면 이미지로 표시 */
-    $media.innerHTML = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block" />`;
-  }else{
-    /* 확실치 않으면 iframe으로 시도(일부 외부 미디어 뷰어) */
-    $media.innerHTML = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0" src="${url}"></iframe>`;
-  }
-}
-
-/* 클릭 핸들러: 카드 → 미디어 표시 */
-document.addEventListener('click', e=>{
-  const card = e.target.closest('article.card');
-  if(card) showMedia(card);
-});
-
-/* ===== 데이터 로드 ===== */
-(async function(){
-  try{
-    // 게시글 + 태그맵 병렬 로드
-    const [rPosts, rTag] = await Promise.all([
-      fetch(GVIZ_POSTS),
-      fetch(GVIZ_TAGMAP).catch(()=>null) // TagMap 탭이 없을 수도 있으니 예외 허용
-    ]);
-
-    if(!rPosts?.ok) throw new Error(`POSTS HTTP ${rPosts?.status}`);
-
-    const [textPosts, textTag] = await Promise.all([
-      rPosts.text(),
-      rTag && rTag.ok ? rTag.text() : Promise.resolve(null)
-    ]);
-
-    // 정렬: 날짜 최신 ↓, 동일 날짜면 id 큰 값 ↓
-    const rows = parseGviz(textPosts).sort(comparePosts);
-
-    // TagMap 파싱
-    TAGMAP = textTag ? parseTagMap(textTag) : new Map();
-
-    render(rows);
-    renderStories(new Set(rows.flatMap(r=>r.tags)));
-
-  }catch(err){
-    $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
-    console.error(err);
-  }
-})();
-</script>
-</body>
-</html>
+    const

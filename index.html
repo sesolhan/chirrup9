@@ -19,8 +19,8 @@
     --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
     --font-sans: 'JoseonGulim', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                  'Apple SD Gothic Neo','Noto Sans KR', sans-serif;
-    --chip-border:#6b7280;     /* ← 태그/좋아요 버튼 기본 테두리 색 */
-     --accent:#54dd22       /* ← 호버시 포커스 색 */
+    --chip-border:#6b7280;  /* 기본 테두리/텍스트 */
+    --accent:#54dd22;       /* 호버 시 색상 */
   }
   *{box-sizing:border-box}
 
@@ -118,22 +118,21 @@
   }
   article h2{margin:0 0 8px; font-size:18px}
 
-  /* ▼ 태그 칩 & 좋아요 버튼: 동일한 테두리 색, 호버시만 액센트 */
-.pill{
-  font-size:12px;
-  padding:4px 8px;
-  border-radius:999px;
-  border:1px dashed var(--muted);  /* 테두리: #6b7280 */
-  color:var(--muted);               /* 텍스트: #6b7280 */
-  background:#e6e6e6;
-  transition:color .15s ease, border-color .15s ease;
-}
-.pill:hover,
-.pill:focus-visible{
-  color:var(--accent);              /* 텍스트: #54dd22 */
-  border-color:var(--accent);       /* 테두리: #54dd22 */
-}
-.like.pill{ cursor:pointer; }       /* 좋아요는 클릭 가능 표시 */
+  /* ▼ 태그 칩 & 좋아요 버튼: 기본은 muted, 호버 때만 accent */
+  .meta{font-size:12px; color:#cfd4dc; margin-bottom:8px; display:flex; gap:8px; align-items:center}
+  .pills{display:flex; gap:8px; flex-wrap:wrap}
+  .pill{
+    font-size:12px; padding:4px 8px; border-radius:999px;
+    border:1px dashed var(--chip-border);
+    color:var(--chip-border);
+    background:#e6e6e6;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .pill:hover, .pill:focus-visible{
+    color:var(--accent);
+    border-color:var(--accent);
+  }
+  .like.pill{ cursor:pointer; }
 
   .content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
 
@@ -201,6 +200,25 @@ const GVIZ_BASE   = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_I
 const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
+
+/* ===== 홈 진입 시 기본 재생 유튜브 ===== */
+const DEFAULT_YT_ID = "HtUH9z_Oey8"; // https://youtu.be/HtUH9z_Oey8
+let defaultShown = false;
+function showDefaultYouTube(){
+  const embed = `https://www.youtube-nocookie.com/embed/${DEFAULT_YT_ID}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
+  const html = `
+    <div class="media-slider">
+      <div class="media-slide">
+        <iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
+          src="${embed}"
+          allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
+          title="Intro video"></iframe>
+      </div>
+      <div class="media-indicator"><span class="media-dot active"></span></div>
+    </div>`;
+  document.getElementById('media').innerHTML = html;
+  defaultShown = true;
+}
 
 /* ===== 유틸: 셀에서 URL 추출 ===== */
 function cellToUrl(cell){
@@ -367,10 +385,11 @@ function parseAbout(text){
 const $list  = document.getElementById('list');
 const $media = document.getElementById('media');
 const $stories = document.getElementById('storyBar');
-const $aboutBtn = document.getElementById('aboutBtn');
+const aboutBtn = document.getElementById('aboutBtn');
 let TAGMAP = new Map();
 let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
 
+/* ===== 렌더 ===== */
 function formatKDate(s){
   const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if(!m) return s || "날짜";
@@ -386,7 +405,6 @@ function groupByDate(posts){
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
 
-/* ===== 렌더 ===== */
 function render(posts){
   if(!posts.length){
     $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`;
@@ -417,9 +435,14 @@ function render(posts){
       </section>
     `;
   }).join("");
-  const first = document.querySelector('article.card');
-  if(first) showMedia(first);
+
+  // 기본 영상이 이미 표시된 경우엔 첫 카드 자동 표시는 생략
+  if(!defaultShown){
+    const first = document.querySelector('article.card');
+    if(first) showMedia(first);
+  }
 }
+
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
   $stories.innerHTML = tags.map(t=>{
@@ -443,6 +466,7 @@ function renderStories(allTags){
     });
   });
 }
+
 function applyTagFilter(tag){
   document.querySelectorAll('#list article.card').forEach(a=>{
     const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
@@ -481,19 +505,16 @@ function showMedia($article){
       html = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
 
     }else if(isImageExt(url) || isDriveUC(url)){
-      // 드라이브 uc 이미지라면 <img>로 직접 로드. 실패하면 프리뷰로 폴백.
       const safeUrl = url.replace(/'/g, "\\'");
       html = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block"
                onerror="fallbackToPreview(this, '${safeUrl}')">`;
 
     }else if(isGoogleHost(url)){
-      // 문서/슬라이드/시트/파일 프리뷰: 큰 높이로
       const preview = drivePreviewUrl(url);
       html = `<iframe src="${preview}"
                style="width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff"></iframe>`;
 
     }else{
-      // 기타 외부 페이지
       html = `<iframe width="100%" style="height:clamp(360px,70vh,1000px);border:0" src="${url}"></iframe>`;
     }
 
@@ -510,7 +531,6 @@ function showMedia($article){
       </div>
     `;
 
-    // 인디케이터/네비 연결
     $media.querySelectorAll('.media-dot').forEach(dot=>{
       dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
     });
@@ -524,7 +544,6 @@ function showMedia($article){
 }
 
 /* ===== About 버튼 이벤트 ===== */
-const aboutBtn = document.getElementById('aboutBtn');
 aboutBtn.addEventListener('mouseenter', () => {
   aboutBtn.style.borderBottomColor = "#111827";
 });
@@ -552,10 +571,15 @@ document.addEventListener('click', (e)=>{
     return;
   }
   const card = e.target.closest('article.card');
-  if(card) showMedia(card);
+  if(card){
+    showMedia(card);
+    defaultShown = false; // 이후엔 기본 영상 상태 아님
+  }
 });
 
 /* ===== 초기 로드 ===== */
+showDefaultYouTube();  // ← 홈 진입 시 기본 유튜브 자동 재생
+
 (async function(){
   try{
     const [rPosts, rTag, rAbout] = await Promise.all([

@@ -54,9 +54,7 @@
   /* 동그라미 태그: 배경 이미지를 원형으로 표시 + 오버레이 */
   .story{
     width:64px; height:64px; flex:0 0 auto; border-radius:999px;
-    background:#bfbfbf center/cover no-repeat; /* 기본(이미지 없을 때) */
     cursor:pointer; position:relative; outline:none;
-    overflow:hidden; /* 오버레이를 원형으로 정확히 클립 */
   }
   /* 인라인 style="--img:url('...')" 로 이미지 주입 */
   .story[data-img="1"]{ background-image:var(--img); }

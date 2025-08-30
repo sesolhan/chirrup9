@@ -24,7 +24,125 @@
   </style>
 </head>
 <body>
-  <h1>안녕하세요, 세솔입니다!</h1>
-  <p>이 페이지는 GitHub Pages로 배포된 첫 페이지입니다 🎉</p>
+  <header>
+    <h1>세솔의 블로그</h1>
+    <div class="muted">Google 스프레드시트에 쓰면 자동으로 보여집니다.</div>
+    <div id="filter" class="tags"></div>
+  </header>
+
+  <main id="posts"><div class="empty">불러오는 중…</div></main>
+
+  <script>
+    const SHEET_ID = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE"; // ← 여기를 본인 시트 ID로!
+    const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    // LocalStorage 기반 좋아요(사용자 로컬 저장, 전세계 합산 아님)
+    const likeKey = (id)=>`like-${id}`;
+    const getLocalLikes = (id, initial=0)=> Number(localStorage.getItem(likeKey(id)) ?? initial);
+    const incLocalLikes = (id)=> localStorage.setItem(likeKey(id), getLocalLikes(id,0)+1);
+
+    function parseGviz(text){
+      const json = JSON.parse(text.substring(47).slice(0,-2));
+      const cols = json.table.cols.map(c=>c.label?.toLowerCase());
+      return json.table.rows.map(r=>{
+        const obj = {};
+        cols.forEach((k,i)=> obj[k]= r.c[i]?.f ?? r.c[i]?.v ?? "");
+        // normalize
+        obj.id = String(obj.id||"").trim();
+        obj.title = String(obj.title||"").trim();
+        obj.body = String(obj.body||"").trim();
+        obj.tags = String(obj.tags||"").split(",").map(s=>s.trim()).filter(Boolean);
+        obj.likes = Number(obj.likes||0);
+        obj.date = String(obj.date||"");
+        obj.published = String(obj.published||"").toLowerCase()==="true";
+        return obj;
+      });
+    }
+
+    function render(posts){
+      const $posts = document.getElementById("posts");
+      if(!posts.length){ $posts.innerHTML = `<div class="empty">게시물이 없습니다.</div>`; return; }
+
+      $posts.innerHTML = posts.map(p=>{
+        const likeCount = getLocalLikes(p.id, p.likes);
+        const tagHtml = p.tags.map(t=>`<span class="pill" data-tag="${t}">#${t}</span>`).join("");
+        return `
+        <article data-id="${p.id}" data-tags="${p.tags.join(",")}">
+          <h2>${p.title}</h2>
+          <div class="meta">${p.date}</div>
+          <div class="post-tags">${tagHtml}</div>
+          <div class="content">${p.body}</div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <button class="like" data-like="${p.id}" aria-label="좋아요">
+              <span>👍</span><span class="count" id="count-${p.id}">${likeCount}</span>
+            </button>
+          </div>
+        </article>`;
+      }).join("");
+
+      // 좋아요(로컬)
+      document.querySelectorAll('[data-like]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          const id = btn.getAttribute('data-like');
+          incLocalLikes(id);
+          document.getElementById(`count-${id}`).textContent = getLocalLikes(id);
+        });
+      });
+
+      // 태그 클릭 시 필터
+      document.querySelectorAll('.post-tags .pill').forEach(pill=>{
+        pill.addEventListener('click', ()=>{
+          const tag = pill.getAttribute('data-tag');
+          setActiveTag(tag);
+        });
+      });
+    }
+
+    function renderTagBar(allTags){
+      const $f = document.getElementById('filter');
+      const tags = Array.from(allTags).sort();
+      $f.innerHTML = ['전체', ...tags].map(t=>
+        `<button class="tag" data-filter="${t}">${t}</button>`
+      ).join('');
+      $f.querySelector('[data-filter="전체"]').classList.add('active');
+      $f.querySelectorAll('.tag').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          $f.querySelectorAll('.tag').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          const t = btn.getAttribute('data-filter');
+          applyFilter(t==='전체'? null : t);
+        });
+      });
+    }
+
+    function applyFilter(tag){
+      document.querySelectorAll('article').forEach(a=>{
+        const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
+        a.style.display = (!tag || tags.includes(tag)) ? '' : 'none';
+      });
+    }
+
+    function setActiveTag(tag){
+      const btn = document.querySelector(`[data-filter="${tag}"]`);
+      if(btn){ btn.click(); }
+    }
+
+    async function load(){
+      try{
+        const res = await fetch(GVIZ);
+        const rows = parseGviz(await res.text())
+          .filter(r=>r.published && r.title)
+          .sort((a,b)=> (b.date||"").localeCompare(a.date||"")); // 최신순
+        render(rows);
+        const tagSet = new Set(rows.flatMap(r=>r.tags));
+        renderTagBar(tagSet);
+      }catch(e){
+        document.getElementById('posts').innerHTML =
+          `<div class="empty">시트를 불러오지 못했습니다. (웹에 게시 되었는지 확인)</div>`;
+        console.error(e);
+      }
+    }
+    load();
+  </script>
 </body>
 </html>

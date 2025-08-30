@@ -3,40 +3,81 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>세솔의 블로그</title>
+<title>chirrup9</title>
 <style>
   :root{
-    --bg:#f5f6f7; --panel:#e5e7eb; --card:#d1d5db; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;}
-  /* 캔버스: 중앙 정렬 2열 그리드 */
-  .stage{max-width:1200px;margin:0 auto;padding:16px;display:grid;gap:0;
-         grid-template-columns:minmax(360px,560px) 1fr; align-items:start}
-  /* 왼쪽 패널(회색 배경) */
-  .left{background:var(--panel); border-radius:0; padding:20px 24px; min-height:100vh}
-  /* 오른쪽 미디어(검정) */
-  .right{background:#000; color:#fff; min-height:calc(100vh - 32px);
-         display:flex; align-items:center; justify-content:center; position:sticky; top:16px}
-  .right .placeholder{opacity:.7; letter-spacing:.02em}
-  /* 스토리형 태그(동그라미) */
-  .stories{display:flex; gap:16px; padding:6px 0 18px; align-items:center}
-  .dot{width:64px;height:64px;border-radius:999px;background:#bfbfbf;display:flex;align-items:center;justify-content:center}
-  .dot span{font-size:13px}
-  /* 날짜 */
-  .date{margin:18px 0 8px; font-weight:700}
-  /* 카드 */
-  article.card{background:var(--card); border:1px solid var(--line); border-radius:16px;
-               padding:16px 18px; margin:10px 0 22px}
-  article h2{margin:0 0 8px; font-size:18px}
-  .meta{font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; gap:8px; align-items:center}
-  .pills{display:flex; gap:8px; flex-wrap:wrap}
-  .pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px dashed #999; background:#eee}
-  .content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
-  /* 반응형: 모바일은 세로 스택 */
-  @media (max-width:900px){ .stage{grid-template-columns:1fr}
-    .right{position:static; min-height:240px; margin-top:12px} }
+  --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
+}
+*{box-sizing:border-box}
+
+/* ▼ 사방 배경/여백 제거 + 가로스크롤 방지 */
+html, body { height:100%; }
+body{
+  margin:0;
+  background:transparent;            /* 바깥(사방) 배경 제거 */
+  color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+  overflow-x:hidden;
+}
+
+/* ▼ 중앙 2열을 화면 전체로 펼치기 */
+.stage{
+  width:100vw;                        /* 전체 너비 */
+  max-width:none;                     /* 고정폭 해제 */
+  margin:0;
+  padding:0;                          /* 바깥 패딩 제거 */
+  display:grid;
+  gap:0;
+  grid-template-columns:minmax(360px,560px) 1fr; 
+  align-items:start;
+}
+
+/* 왼쪽 패널(회색) – 내부 여백은 필요에 맞게 조절 */
+.left{
+  background:var(--panel);
+  border-radius:0;
+  padding:0;
+  min-height:100vh;
+}
+
+/* 오른쪽 미디어(초록) – 화면 높이 꽉, 상단 고정 */
+.right{
+  background:#bbfdc8;
+  color:#fff;
+  min-height:100vh;                   /* 전체 높이 */
+  display:flex; align-items:center; justify-content:center;
+  position:sticky; top:0;             /* 상단에 고정 */
+}
+.right .placeholder{opacity:.7; letter-spacing:.02em}
+
+/* 스토리형 태그(동그라미) */
+.stories{display:flex; gap:16px; padding:6px 0 18px; align-items:center}
+.dot{width:64px;height:64px;border-radius:999px;background:#bfbfbf;display:flex;align-items:center;justify-content:center}
+.dot span{font-size:13px}
+
+/* 날짜 */
+.date{margin:18px 0 8px; font-weight:700}
+
+/* 카드 */
+article.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 18px;
+  margin:10px 0 22px;
+}
+article h2{margin:0 0 8px; font-size:18px}
+.meta{font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; gap:8px; align-items:center}
+.pills{display:flex; gap:8px; flex-wrap:wrap}
+.pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px dashed #999; background:#eee}
+.content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
+
+/* 반응형: 모바일은 세로 스택 */
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr}
+  .right{position:static; min-height:240px; margin-top:0}
+}
+
 </style>
 </head>
 <body>

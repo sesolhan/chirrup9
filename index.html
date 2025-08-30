@@ -58,6 +58,7 @@
   }
   .story[data-img="1"]{ background-image:var(--img); }
 
+  /* 호버 딤(원형 전체 덮기) */
   .story::before{
     content:"";
     position:absolute; inset:0;
@@ -66,6 +67,7 @@
     opacity:0; transition:opacity .15s ease;
     pointer-events:none;
   }
+  /* 중앙 텍스트 */
   .story::after{
     content: attr(data-label);
     position:absolute; inset:0;
@@ -110,10 +112,11 @@
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
     </section>
-    <aside class="right" id="media"><div class="placeholder">미디어</div></aside>
+    <aside class="right" id="media"><div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div></aside>
   </main>
 
 <script>
+/* ===== 시트 연결 ===== */
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
 const POSTS_SHEET  = "";
 const TAGMAP_SHEET = "TagMap";
@@ -121,6 +124,44 @@ const GVIZ_BASE   = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_I
 const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 
+/* === 좋아요 서버(GAS) 설정 === */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx0-YkglVKqumqFmczRCKASM2PcvjOYl_gyifjS5Y1b_8C91JGEFwZgVRcBF9AZ4WLV/exec";
+
+/* JSONP 헬퍼: CORS 없이 호출 */
+function jsonp(url){
+  return new Promise((resolve,reject)=>{
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const cleanup = ()=>{ delete window[cb]; s.remove(); };
+    const timer = setTimeout(()=>{ cleanup(); reject(new Error('JSONP timeout')); }, 8000);
+    window[cb] = (data)=>{ clearTimeout(timer); cleanup(); resolve(data); };
+    s.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    s.onerror = ()=>{ clearTimeout(timer); cleanup(); reject(new Error('JSONP error')); };
+    document.head.appendChild(s);
+  });
+}
+function likeInc(id){
+  const url = `${GAS_URL}?id=${encodeURIComponent(id)}&inc=1`;
+  return jsonp(url).then(r => (r && r.ok ? r.likes : null));
+}
+function fetchLikes(ids){
+  if(!ids.length) return Promise.resolve({});
+  const url = `${GAS_URL}?list=${encodeURIComponent(ids.join(','))}`;
+  return jsonp(url).then(r => (r && r.ok ? (r.likes||{}) : {}));
+}
+function syncInitialLikes(){
+  const ids = Array.from(document.querySelectorAll('[data-like]')).map(b=>b.getAttribute('data-like'));
+  fetchLikes(ids).then(map=>{
+    ids.forEach(id=>{
+      if(typeof map[id] === 'number'){
+        const span = document.getElementById(`like-${id}`);
+        if(span) span.textContent = String(map[id]);
+      }
+    });
+  }).catch(console.warn);
+}
+
+/* ===== 유틸: 셀에서 URL 추출 (텍스트/하이퍼링크/수식 모두 대응) ===== */
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
   const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
@@ -133,6 +174,7 @@ function cellToUrl(cell){
   return s;
 }
 
+/* ===== 본문 파싱 ===== */
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
@@ -166,13 +208,14 @@ function parseGviz(text){
       tags:String(get(idx.tags)?.v ?? get(idx.tags)?.f ?? "").split(",").map(s=>s.trim()).filter(Boolean),
       likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
       date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
-      media: mediaArr, // 배열로 저장
+      media: mediaArr, // 배열
       published
     };
   });
   return rows.filter(r=>r.published && r.title);
 }
 
+/* ===== TagMap 파싱 ===== */
 function normLabel(s){ return String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,''); }
 const TAGMAP_ALIAS = {
   tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
@@ -195,6 +238,7 @@ function parseTagMap(text){
   return map;
 }
 
+/* ===== 정렬: 날짜 ↓, 같은 날짜면 id 숫자 ↓ ===== */
 function dateKey(s){
   if(!s) return "";
   const digits = String(s).replace(/[^0-9]/g, "");
@@ -212,6 +256,7 @@ function comparePosts(a, b){
   return String(b.id||"").localeCompare(String(a.id||""));
 }
 
+/* ===== 드라이브 링크 처리 & 미디어 판별 ===== */
 function extractDriveId(url){
   let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if(m) return m[1];
   m = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/); if(m) return m[1];
@@ -233,10 +278,10 @@ function isYouTube(u){ return /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u); }
 function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
 function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
 
+/* ===== DOM 핸들 ===== */
 const $list  = document.getElementById('list');
 const $media = document.getElementById('media');
 const $stories = document.getElementById('storyBar');
-
 let TAGMAP = new Map();
 
 function formatKDate(s){
@@ -254,6 +299,7 @@ function groupByDate(posts){
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
 
+/* ===== 렌더 ===== */
 function render(posts){
   if(!posts.length){ $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`; return; }
 
@@ -262,12 +308,13 @@ function render(posts){
     const cards = items.map(p=>{
       const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
       const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-      // 여러 미디어 URL을 JSON으로 저장
       return `
         <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
           <h2>${p.title}</h2>
           <div class="meta">
-            <span class="pill">좋아요 ${p.likes ?? 0}</span>
+            <button class="pill like" type="button" data-like="${pid}">
+              👍 <span id="like-${pid}">${p.likes ?? 0}</span>
+            </button>
             <span class="pills">${tags}</span>
           </div>
           <div class="content">${p.body}</div>
@@ -313,26 +360,24 @@ function renderStories(allTags){
 }
 
 function applyTagFilter(tag){
+  // 카드 표시/숨김
   document.querySelectorAll('#list article.card').forEach(a=>{
     const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
     const show = (!tag || tag==='전체' || tags.includes(tag));
     a.style.display = show ? '' : 'none';
   });
-
+  // 해당 태그 글이 없는 날짜 그룹 숨김
   document.querySelectorAll('#list .group').forEach(g=>{
     const anyVisible = Array.from(g.querySelectorAll('article.card')).some(a => a.style.display !== 'none');
     g.style.display = anyVisible ? '' : 'none';
   });
 }
 
-/* ===== 여러 미디어 표시 ===== */
+/* ===== 미디어 표시(여러 개 지원) ===== */
 function showMedia($article){
   let mediaArr = [];
-  try {
-    mediaArr = JSON.parse($article.getAttribute('data-media')||"[]");
-  } catch {
-    mediaArr = [];
-  }
+  try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
+  catch { mediaArr = []; }
   if(!mediaArr.length){ $media.innerHTML = `<div class="placeholder">미디어</div>`; return; }
 
   $media.innerHTML = mediaArr.map(raw=>{
@@ -351,11 +396,31 @@ function showMedia($article){
   }).join('');
 }
 
-document.addEventListener('click', e=>{
+/* ===== 이벤트: 카드 클릭 → 미디어 / 좋아요 클릭 → 서버 반영 ===== */
+document.addEventListener('click', (e)=>{
+  // 좋아요
+  const likeBtn = e.target.closest('.like[data-like]');
+  if(likeBtn){
+    e.stopPropagation();
+    const id = likeBtn.getAttribute('data-like');
+    const label = document.getElementById(`like-${id}`);
+    const prev = Number(label?.textContent || 0);
+    if(label) label.textContent = String(prev + 1); // 낙관적
+    likeInc(id).then(total=>{
+      if(typeof total === 'number' && label) label.textContent = String(total);
+    }).catch(err=>{
+      console.warn('like failed', err);
+      if(label) label.textContent = String(prev); // 실패 시 롤백(선택)
+    });
+    return;
+  }
+
+  // 카드 클릭 → 미디어
   const card = e.target.closest('article.card');
   if(card) showMedia(card);
 });
 
+/* ===== 로드 ===== */
 (async function(){
   try{
     const [rPosts, rTag] = await Promise.all([
@@ -375,8 +440,13 @@ document.addEventListener('click', e=>{
 
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));
+    syncInitialLikes(); // ← 서버의 합산값으로 초기화
 
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);
   }
+})();
+</script>
+</body>
+</html>

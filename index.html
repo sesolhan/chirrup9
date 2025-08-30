@@ -14,7 +14,7 @@
   html, body { height:100%; }
   body{
     margin:0;
-    background:transparent;            /* 바깥(사방) 배경 제거 */
+    background:transparent;
     color:var(--fg);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
     overflow-x:hidden;
@@ -103,10 +103,8 @@
   <main class="stage">
     <!-- 왼쪽: 태그/날짜/카드 -->
     <section class="left">
-      <!-- 텍스트/도트 제거 → 비워둔 컨테이너만 -->
       <div class="stories" id="storyBar"></div>
-
-      <div id="list"><!-- 시트에서 불러오면 이 아래로 날짜와 카드가 렌더됩니다 --></div>
+      <div id="list"></div>
     </section>
 
     <!-- 오른쪽: 이미지/영상 -->
@@ -115,19 +113,13 @@
 
 <script>
 /* ===== 시트 연결 설정 ===== */
-const SHEET_ID   = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";  // ← 스프레드시트 ID로 교체
-const SHEET_NAME = "";                    // 탭 이름이 있으면 예: "블로그"
-const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` +
-             (SHEET_NAME ? `&sheet=${encodeURIComponent(SHEET_NAME)}` : "");
+const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";  // ← 스프레드시트 ID로 교체
+const POSTS_SHEET  = "";            // 본문 탭(없으면 첫 탭)
+const TAGMAP_SHEET = "TagMap";      // 태그-이미지 매핑 탭 이름
 
-/* 태그 → 대표 이미지 URL 매핑 (원하는 이미지로 교체하세요) */
-const TAG_IMAGES = {
-  "전체": "",                       // 전체는 이미지 없어도 됨
-  "일상": "https://picsum.photos/seed/daily/200",
-  "음악": "https://picsum.photos/seed/music/200",
-  "여행": "https://picsum.photos/seed/travel/200",
-  // ...태그명:이미지URL 계속 추가
-};
+const GVIZ_BASE     = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
+const GVIZ_POSTS    = GVIZ_BASE(POSTS_SHEET);
+const GVIZ_TAGMAP   = GVIZ_BASE(TAGMAP_SHEET);
 
 /* ===== 데이터 파싱(한국어/영어 헤더 자동 인식) ===== */
 const headerMap = {
@@ -135,16 +127,22 @@ const headerMap = {
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
   published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
 };
+const tagMapHeader = {
+  tag: ['tag','tags','태그','name','label'],
+  img: ['imageurl','image','url','이미지','링크','이미지url']
+};
+
 function parseGviz(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
   const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
-  const find = key => {
-    const idx = labels.findIndex(l=>headerMap[key].includes(l));
+  const find = (aliases)=> {
+    const idx = labels.findIndex(l=>aliases.includes(l));
     return idx===-1 ? null : idx;
   };
   const idx = {
-    id:find('id'), title:find('title'), body:find('body'), tags:find('tags'),
-    likes:find('likes'), date:find('date'), published:find('published'), media:find('media')
+    id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
+    tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
+    published:find(headerMap.published), media:find(headerMap.media)
   };
   const rows = json.table.rows.map(r=>{
     const get = i => (i===null? "" : (r.c[i]?.f ?? r.c[i]?.v ?? ""));
@@ -165,10 +163,30 @@ function parseGviz(text){
   return rows.filter(r=>r.published && r.title);
 }
 
+function parseTagMap(text){
+  const json = JSON.parse(text.substring(47).slice(0,-2));
+  const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
+  const colTag = labels.findIndex(l=>tagMapHeader.tag.includes(l));
+  const colImg = labels.findIndex(l=>tagMapHeader.img.includes(l));
+  const map = new Map();
+  if(colTag===-1 || colImg===-1) return map;
+
+  json.table.rows.forEach(r=>{
+    const t = (r.c[colTag]?.v ?? r.c[colTag]?.f ?? "").toString().trim();
+    const u = (r.c[colImg]?.v ?? r.c[colImg]?.f ?? "").toString().trim();
+    if(t && u){
+      map.set(t.toLowerCase(), u);
+    }
+  });
+  return map;
+}
+
 /* ===== 렌더 ===== */
 const $list  = document.getElementById('list');
 const $media = document.getElementById('media');
 const $stories = document.getElementById('storyBar');
+
+let TAGMAP = new Map(); // lowerCase 태그 → 이미지 URL
 
 function formatKDate(s){
   const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
@@ -184,6 +202,7 @@ function groupByDate(posts){
   });
   return Array.from(map.entries()).sort((a,b)=> (b[0]||"").localeCompare(a[0]||""));
 }
+
 function render(posts){
   if(!posts.length){ $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`; return; }
 
@@ -205,16 +224,17 @@ function render(posts){
     }).join("");
     return `<div class="date">${formatKDate(date)}</div>${cards}`;
   }).join("");
+
   // 초기 미디어: 첫 카드
   const first = document.querySelector('article.card');
   if(first) showMedia(first);
 }
 
-/* 스토리(동그라미) 렌더 + 필터 */
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
   $stories.innerHTML = tags.map(t=>{
-    const img = TAG_IMAGES[t];
+    const key = t.toLowerCase();
+    const img = TAGMAP.get(key);
     const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
     return `
       <button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}" title="${t}">
@@ -235,6 +255,7 @@ function renderStories(allTags){
     });
   });
 }
+
 function applyTagFilter(tag){
   document.querySelectorAll('#list article.card').forEach(a=>{
     const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
@@ -266,12 +287,29 @@ document.addEventListener('click', e=>{
 /* ===== 데이터 로드 ===== */
 (async function(){
   try{
-    const res = await fetch(GVIZ);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const rows = parseGviz(text).sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    // 게시글 + 태그맵 병렬 로드
+    const [rPosts, rTag] = await Promise.all([
+      fetch(GVIZ_POSTS),
+      fetch(GVIZ_TAGMAP).catch(()=>null) // TagMap 탭이 없을 수도 있으니 예외 허용
+    ]);
+
+    if(!rPosts?.ok) throw new Error(`POSTS HTTP ${rPosts?.status}`);
+
+    const [textPosts, textTag] = await Promise.all([
+      rPosts.text(),
+      rTag && rTag.ok ? rTag.text() : Promise.resolve(null)
+    ]);
+
+    const rows = parseGviz(textPosts).sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    if(textTag){
+      TAGMAP = parseTagMap(textTag);
+    }else{
+      TAGMAP = new Map(); // 없으면 빈 맵
+    }
+
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));
+
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);

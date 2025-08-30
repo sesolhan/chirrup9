@@ -1,3 +1,7 @@
+아래 전체 파일을 `index.html`로 저장하세요.
+(업데이트: **여러 미디어 파싱(cellToUrls)**, **Google Drive/Docs/Slides/Sheets 프리뷰 자동 임베드** + **뷰포트 기반 큰 높이(최대 1200px)**, 이미지형 `uc` 링크 실패 시 프리뷰 폴백 유지)
+
+```html
 <!doctype html>
 <html lang="ko">
 <head>
@@ -6,7 +10,7 @@
 <title>chirrup9</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
-  /* ▼ 웹폰트 선언 (스타일 블록 최상단) */
+  /* ▼ 웹폰트 선언 */
   @font-face {
     font-family: 'JoseonGulim';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
@@ -27,7 +31,7 @@
     margin:0;
     background:transparent;
     color:var(--fg);
-    font-family: var(--font-sans); /* 웹폰트 적용 */
+    font-family: var(--font-sans);
     overflow-x:hidden;
   }
 
@@ -46,7 +50,6 @@
     position:relative;
   }
 
-  /* 헤더/링크에도 동일 폰트 적용(선택) */
   h1,h2,h3,.about-link,.date,.pill,.story::after { font-family: var(--font-sans); }
 
   .about-link{
@@ -71,6 +74,7 @@
     display:flex; gap:16px; padding:12px 16px 18px; align-items:center; overflow-x:auto;
   }
 
+  /* 스토리(동그라미) */
   .story{
     width:64px; height:64px; flex:0 0 auto;
     border-radius:999px;
@@ -185,7 +189,7 @@ const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-/* ===== 유틸: 셀에서 URL 추출 (텍스트/하이퍼링크/수식 모두 대응) ===== */
+/* ===== 유틸: 셀에서 URL 추출 ===== */
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
   const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
@@ -196,6 +200,21 @@ function cellToUrl(cell){
   const m = s.match(/https?:\/\/[^\s)"><]+/);
   if(m?.[0]) return m[0];
   return s;
+}
+// 여러 개의 URL 모두 추출(쉼표/줄바꿈/공백)
+function cellToUrls(cell){
+  let s = typeof cell?.f === 'string' ? cell.f : String(cell?.v ?? cell?.f ?? '').trim();
+  const urls = [];
+  const re = /https?:\/\/[^\s)"><]+/g;
+  let m;
+  while ((m = re.exec(s)) !== null) urls.push(m[0]);
+  if (!urls.length) {
+    s.split(/[,，\n\r]+/).forEach(part=>{
+      const hit = part.match(/https?:\/\/[^\s)"><]+/);
+      if (hit) urls.push(hit[0]);
+    });
+  }
+  return urls;
 }
 
 /* ===== 본문 파싱 ===== */
@@ -218,9 +237,8 @@ function parseGviz(text){
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
     const published = (idx.published===-1) ? true
       : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
-    // 여러 미디어 쉼표로 구분
-    const mediaRaw = cellToUrl(get(idx.media));
-    const mediaArr = String(mediaRaw||"").split(",").map(s=>s.trim()).filter(Boolean);
+    // 여러 미디어 추출
+    const mediaArr = cellToUrls(get(idx.media));
     return {
       id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
       title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
@@ -275,41 +293,48 @@ function comparePosts(a, b){
   return String(b.id||"").localeCompare(String(a.id||""));
 }
 
-/* ===== 드라이브 링크 처리 & 미디어 판별 ===== */
-function extractDriveId(url){
-  let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if(m) return m[1];
-  m = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/); if(m) return m[1];
-  m = url.match(/\/uc(?:\?|\/).*?[?&]id=([a-zA-Z0-9_-]+)/); if(m) return m[1];
-  m = url.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/); if(m) return m[1];
-  return null;
+/* ===== Google 링크 처리 & 판별 ===== */
+function extractGoogleIdAndType(url){
+  const m = url.match(/https?:\/\/(?:drive|docs)\.google\.com\/(file|document|presentation|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return { kind:m[1], id:m[2] };
+  const m2 = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/);
+  if(m2) return { kind:'file', id:m2[1] };
+  const m3 = url.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+  if(m3) return { kind:'file', id:m3[1] };
+  return { kind:null, id:null };
 }
 function normalizeMediaUrl(raw){
   const url = String(raw||"").trim();
   if(!url) return "";
-  if(/https?:\/\/(?:drive|docs)\.google\.com\/uc/i.test(url)) return url;
-  if(/https?:\/\/drive\.google\.com/i.test(url)){
-    const id = extractDriveId(url);
-    if(id) return `https://drive.google.com/uc?export=view&id=${id}`;
+  // file/d/ → 이미지/동영상 파일에 적합한 uc 뷰
+  const {kind, id} = extractGoogleIdAndType(url);
+  if(kind === 'file' && id){
+    return `https://drive.google.com/uc?export=view&id=${id}`;
   }
+  // 문서/프레젠테이션/시트는 원본 유지(프리뷰로 임베드)
   return url;
+}
+function drivePreviewUrl(u){
+  const {kind, id} = extractGoogleIdAndType(u);
+  if(!id) return u;
+  if(kind === 'document')     return `https://docs.google.com/document/d/${id}/preview`;
+  if(kind === 'presentation') return `https://docs.google.com/presentation/d/${id}/preview`;
+  if(kind === 'spreadsheets') return `https://docs.google.com/spreadsheets/d/${id}/preview`;
+  return `https://drive.google.com/file/d/${id}/preview`;
 }
 function isYouTube(u){ return /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u); }
 function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
 function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
-function isDriveFile(u){ return /drive\.google\.com/.test(u); }
-
-/* === 드라이브 임베드 보조 헬퍼 (X-Frame 거부 대응) === */
+function isGoogleHost(u){ return /https?:\/\/(?:drive|docs)\.google\.com/i.test(u); }
 function isDriveUC(u){ return /https?:\/\/drive\.google\.com\/uc\?/i.test(u); }
-function drivePreviewUrl(u){
-  const id = extractDriveId(u);
-  return id ? `https://drive.google.com/file/d/${id}/preview` : u;
-}
+
+/* uc 이미지 실패 시 프리뷰로 폴백 */
 function fallbackToPreview(img, rawUrl){
   const host = img.closest('.media-slide') || img.parentElement;
   if(!host) return;
   const iframe = document.createElement('iframe');
   iframe.src = drivePreviewUrl(rawUrl);
-  iframe.style.cssText = 'width:100%;height:400px;border:0;background:#fff';
+  iframe.style.cssText = 'width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff';
   host.innerHTML = '';
   host.appendChild(iframe);
 }
@@ -417,7 +442,7 @@ function applyTagFilter(tag){
   });
 }
 
-/* ===== 미디어 슬라이더 (인스타그램 스타일) — Drive 폴백 지원 ===== */
+/* ===== 미디어 슬라이더 — Drive/Docs는 큰 높이로 임베드 ===== */
 function showMedia($article){
   let mediaArr = [];
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
@@ -448,13 +473,15 @@ function showMedia($article){
       html = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block"
                onerror="fallbackToPreview(this, '${safeUrl}')">`;
 
-    }else if(isDriveFile(url)){
-      // 드라이브 일반 링크는 프리뷰 뷰어로 임베드(iframe 허용)
-      html = `<iframe src="${drivePreviewUrl(url)}"
-               style="width:100%;height:400px;border:0;background:#fff"></iframe>`;
+    }else if(isGoogleHost(url)){
+      // 문서/슬라이드/시트/파일 프리뷰: 큰 높이로
+      const preview = drivePreviewUrl(url);
+      html = `<iframe src="${preview}"
+               style="width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff"></iframe>`;
 
     }else{
-      html = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0" src="${url}"></iframe>`;
+      // 기타 외부 페이지
+      html = `<iframe width="100%" style="height:clamp(360px,70vh,1000px);border:0" src="${url}"></iframe>`;
     }
 
     $media.innerHTML = `
@@ -499,7 +526,7 @@ $aboutBtn.addEventListener('keydown', (e) => {
   }
 });
 
-/* ===== 카드/좋아요 클릭 이벤트 (좋아요 서버 연동 생략 버전) ===== */
+/* ===== 카드/좋아요 클릭 (서버 연동 없이 로컬 증가) ===== */
 document.addEventListener('click', (e)=>{
   const likeBtn = e.target.closest('.like[data-like]');
   if(likeBtn){
@@ -541,3 +568,4 @@ document.addEventListener('click', (e)=>{
 </script>
 </body>
 </html>
+```

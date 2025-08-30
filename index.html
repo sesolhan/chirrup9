@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>세솔의 블로그</title>
+  <title>chirrup9</title>
   <style>
     :root { --bg:#f9fafb; --fg:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb; }
     *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:var(--bg);color:var(--fg)}
@@ -25,8 +25,7 @@
 </head>
 <body>
   <header>
-    <h1>세솔의 블로그</h1>
-    <div class="muted">Google 스프레드시트에 쓰면 자동으로 보여집니다.</div>
+    <h1></h1>
     <div id="filter" class="tags"></div>
   </header>
 
@@ -79,15 +78,6 @@
           </div>
         </article>`;
       }).join("");
-
-      // 좋아요(로컬)
-      document.querySelectorAll('[data-like]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          const id = btn.getAttribute('data-like');
-          incLocalLikes(id);
-          document.getElementById(`count-${id}`).textContent = getLocalLikes(id);
-        });
-      });
 
   // ...위 코드 중간에 추가:
   const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzCe8Yxe5rBGvd_8FsFde1R9BLc7dutQDgU0N1Rg8x3S39c4MPPOa6FR-PPGOGkX1Mm/exec"; // ← 배포 URL

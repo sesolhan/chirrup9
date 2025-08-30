@@ -130,7 +130,7 @@
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
     </section>
-    <aside class="right" id="media"><div class="placeholder">미디어</div></aside>
+    <aside class="right" id="media"><div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div></aside>
   </main>
 <script>
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
@@ -340,7 +340,7 @@ function showMedia($article){
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
   catch { mediaArr = []; }
   if(!mediaArr.length){
-    $media.innerHTML = `<div class="placeholder">미디어</div>`;
+    $media.innerHTML = `<div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>`;
     return;
   }
   let idx = 0;
@@ -408,3 +408,7 @@ document.addEventListener('click', e=>{
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);
   }
+})();
+</script>
+</body>
+</html>

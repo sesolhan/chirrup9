@@ -38,7 +38,7 @@
 
   /* 오른쪽 미디어 */
   .right{
-    background:#54dd22;
+    background:#7ce84e;
     color:#fff;
     min-height:100vh;
     display:flex; align-items:center; justify-content:center;
@@ -53,22 +53,23 @@
 
   /* 동그라미 태그: 배경 이미지를 원형으로 표시 + 오버레이 */
   .story{
+    --ring: 2px;                     /* 테두리 두께 변수(딤 inset에 사용) */
     width:64px; height:64px; flex:0 0 auto; border-radius:999px;
     background:#bfbfbf center/cover no-repeat;        /* 기본(이미지 없을 때) */
-    border:2px solid transparent; cursor:pointer; position:relative;
+    border:var(--ring) solid transparent; cursor:pointer; position:relative;
     outline:none;
+    overflow:hidden;                  /* 라운드 영역로 오버레이를 정확히 클립 */
   }
   /* 인라인 style="--img:url('...')" 로 이미지 주입 */
   .story[data-img="1"]{ background-image:var(--img); }
 
-  /* 딤 레이어 */
+  /* 딤 레이어: 원형 전체(테두리 포함) 덮기 */
   .story::before{
     content:"";
-    position:absolute; inset:0;
-    background:rgba(0,0,0,.45);
+    position:absolute; inset: calc(var(--ring) * -1);
     border-radius:inherit;
-    opacity:0;
-    transition:opacity .15s ease;
+    box-shadow: inset 0 0 0 100vmax rgba(0,0,0,.45);
+    opacity:0; transition:opacity .15s ease;
     pointer-events:none;
   }
   /* 중앙 텍스트 */
@@ -92,6 +93,9 @@
 
   /* 날짜 */
   .date{margin:18px 0 8px; font-weight:700}
+
+  /* 날짜 그룹 래퍼(필터 시 전체 숨김용) */
+  .group{ margin-bottom:12px; }
 
   /* 카드 */
   article.card{
@@ -180,7 +184,7 @@ function normLabel(s){
 }
 const TAGMAP_ALIAS = {
   tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
-  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지url','이미지사진','photo','icon'].map(normLabel))
+  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(normLabel))
 };
 function parseTagMap(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
@@ -221,6 +225,34 @@ function comparePosts(a, b){
   if(ib != null) return  1;
   return String(b.id||"").localeCompare(String(a.id||"")); // 문자열 id 내림차순
 }
+
+/* ===== 구글 드라이브 이미지 링크 → 직접 표시 URL 변환 ===== */
+function normalizeMediaUrl(raw){
+  const url = String(raw||"").trim();
+  if(!url) return "";
+
+  // 이미 uc 링크면 그대로
+  if(/\/uc(\?|\/)/.test(url)) return url;
+
+  // /file/d/<ID>/... 패턴
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(m1 && m1[1]) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
+
+  // open?id=<ID> 패턴
+  const m2 = url.match(/[?&]id=([^&]+)/);
+  if(/drive\.google\.com/.test(url) && m2 && m2[1]) {
+    return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+  }
+
+  // docs.google.com/uc?id=<ID> 등은 그대로
+  if(/docs\.google\.com\/uc/.test(url)) return url;
+
+  return url; // 기타는 원본 반환
+}
+
+function isYouTube(u){ return /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u); }
+function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
+function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
 
 /* ===== 렌더 ===== */
 const $list  = document.getElementById('list');
@@ -264,7 +296,12 @@ function render(posts){
         </article>
       `;
     }).join("");
-    return `<div class="date">${formatKDate(date)}</div>${cards}`;
+    return `
+      <section class="group" data-date="${date}">
+        <div class="date">${formatKDate(date)}</div>
+        ${cards}
+      </section>
+    `;
   }).join("");
 
   // 초기 미디어: 첫 카드
@@ -300,24 +337,40 @@ function renderStories(allTags){
 }
 
 function applyTagFilter(tag){
+  // 1) 카드 표시/숨김
   document.querySelectorAll('#list article.card').forEach(a=>{
     const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
-    a.style.display = (!tag || tag==='전체' || tags.includes(tag)) ? '' : 'none';
+    const show = (!tag || tag==='전체' || tags.includes(tag));
+    a.style.display = show ? '' : 'none';
+  });
+
+  // 2) 날짜 그룹 단위로, 보일 카드가 없으면 그룹 자체 숨김
+  document.querySelectorAll('#list .group').forEach(g=>{
+    const anyVisible = Array.from(g.querySelectorAll('article.card')).some(a => a.style.display !== 'none');
+    g.style.display = anyVisible ? '' : 'none';
   });
 }
 
 /* ===== 미디어 표시(오른쪽) ===== */
 function showMedia($article){
-  const url = decodeURIComponent($article.getAttribute('data-media')||"");
+  let url = decodeURIComponent($article.getAttribute('data-media')||"");
   if(!url){ $media.innerHTML = `<div class="placeholder">미디어</div>`; return; }
-  if(/(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url)){
+
+  // 1) 구글 드라이브 공유 링크 정규화
+  url = normalizeMediaUrl(url);
+
+  if(isYouTube(url)){
     const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
     $media.innerHTML = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
       src="https://www.youtube-nocookie.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-  }else if(/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)){
+  }else if(isVideo(url)){
     $media.innerHTML = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
-  }else{
+  }else if(isImageExt(url) || /drive\.google\.com\/uc/.test(url)){
+    /* 이미지 확장자 or 드라이브 uc 링크면 이미지로 표시 */
     $media.innerHTML = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block" />`;
+  }else{
+    /* 확실치 않으면 iframe으로 시도(일부 외부 미디어 뷰어) */
+    $media.innerHTML = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0" src="${url}"></iframe>`;
   }
 }
 

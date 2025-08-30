@@ -6,7 +6,6 @@
 <title>chirrup9</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
-  /* ▼ 웹폰트 선언 */
   @font-face {
     font-family: 'JoseonGulim';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
@@ -14,17 +13,15 @@
     font-style: normal;
     font-display: swap;
   }
-
   :root{
     --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
     --font-sans: 'JoseonGulim', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                  'Apple SD Gothic Neo','Noto Sans KR', sans-serif;
-    --chip-border:#6b7280;  /* 기본 테두리/텍스트 */
-    --accent:#54dd22;       /* 호버 시 색상 (좋아요/닫기 버튼 등) */
+    --chip-border:#6b7280;
+    --accent:#54dd22;
   }
   *{box-sizing:border-box}
-
-  html, body { height:100%; overscroll-behavior: none; }   /* 반동 제거 */
+  html, body { height:100%; overscroll-behavior: none; }
   body{
     margin:0;
     background:transparent;
@@ -32,14 +29,12 @@
     font-family: var(--font-sans);
     overflow-x:hidden;
   }
-
   .stage{
     width:100vw; max-width:none; margin:0; padding:0;
     display:grid; gap:0;
     grid-template-columns:minmax(360px,560px) 1fr; 
     align-items:start;
   }
-
   .left{
     background:var(--panel);
     border-radius:0;
@@ -48,18 +43,12 @@
     position:relative;
     overscroll-behavior: contain;
   }
-
   h1,h2,h3,.about-link,.date,.pill,.story::after { font-family: var(--font-sans); }
-
   .about-link{
     font-weight:700; font-size:18px; cursor:pointer; transition:.15s;
     border-bottom:2px solid transparent; display:inline-block; margin-bottom:18px;
   }
-  .about-link:hover, .about-link:focus{
-    border-bottom-color:#111827;
-    text-decoration:none;
-  }
-
+  .about-link:hover, .about-link:focus{ border-bottom-color:#111827; text-decoration:none; }
   .right{
     background:#54dd22;
     color:#fff;
@@ -69,12 +58,9 @@
     overscroll-behavior: contain;
   }
   .right .placeholder{opacity:.7; letter-spacing:.02em}
-
   .stories{
     display:flex; gap:16px; padding:12px 16px 18px; align-items:center; overflow-x:auto;
   }
-
-  /* 스토리(동그라미) */
   .story{
     width:64px; height:64px; flex:0 0 auto;
     border-radius:999px;
@@ -106,12 +92,9 @@
   }
   .story:hover::before, .story:focus-visible::before, .story:active::before{ opacity:1; }
   .story:hover::after,  .story:focus-visible::after,  .story:active::after { opacity:1; transform:scale(1); }
-
   .sr-only{ position:absolute; clip:rect(0,0,0,0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
-
   .date{margin:18px 0 8px; font-weight:700}
   .group{ margin-bottom:12px; }
-
   article.card{
     background:var(--card);
     border-radius:16px;
@@ -119,8 +102,6 @@
     margin:10px 0 22px;
   }
   article h2{margin:0 0 8px; font-size:18px}
-
-  /* ▼ 태그 칩 & 좋아요 버튼 */
   .meta{font-size:12px; color:#cfd4dc; margin-bottom:8px; display:flex; gap:8px; align-items:center}
   .pills{display:flex; gap:8px; flex-wrap:wrap}
   .pill{
@@ -130,20 +111,12 @@
     background:#e6e6e6;
     transition:color .15s ease, border-color .15s ease;
   }
-  /* 태그 칩은 호버 색변경 없음 (요청사항) */
-  /* .pill:hover 없음 */
-
-  /* 좋아요 버튼만 호버 시 포커스 색 변경 */
   .like.pill{ cursor:pointer; }
-  .like.pill:hover,
-  .like.pill:focus-visible{
+  .like.pill:hover, .like.pill:focus-visible{
     color:var(--accent);
     border-color:var(--accent);
   }
-
   .content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
-
-  /* 미디어 슬라이더 */
   .media-slider{
     width:100%; max-width:600px; min-height:240px;
     position:relative; display:flex; align-items:center; justify-content:center;
@@ -179,8 +152,6 @@
     display:inline-block;
   }
   .media-dot.active{ opacity:1; background:#54dd22; }
-
-  /* 닫기(X) 버튼: 데스크톱/모바일 공통 스타일 */
   .media-close{
     position:absolute; top:10px; right:12px;
     width:36px; height:36px; line-height:34px; text-align:center;
@@ -189,24 +160,22 @@
     font-size:20px; cursor:pointer;
     transition:color .15s, border-color .15s;
     z-index:1000;
-    display:none; /* 필요할 때만 표시 */
+    display:none;
   }
   .media-close:hover, .media-close:focus-visible{
     color:var(--accent); border-color:var(--accent);
   }
-
-  /* ▼ 모바일: 미디어를 모달로 표시 */
   @media (max-width:900px){
     .stage{grid-template-columns:1fr}
     .right{
       position:fixed; inset:0; z-index:999;
-      display:none;                       /* 기본 감춤 */
+      display:none;
       align-items:center; justify-content:center;
       padding:14px;
     }
-    .right.open{ display:flex; }          /* JS로 토글 */
+    .right.open{ display:flex; }
     .media-slider{max-width:100vw;}
-    body.modal-open{ overflow:hidden; }   /* 모달 열릴 때 배경 스크롤 금지 */
+    body.modal-open{ overflow:hidden; }
   }
 </style>
 </head>
@@ -217,47 +186,39 @@
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
     </section>
-
-    <!-- 우측 미디어(데스크톱: 고정 컬럼 / 모바일: 모달) -->
     <aside class="right" id="media" aria-modal="true" role="dialog">
       <button id="mediaClose" class="media-close" aria-label="닫기" title="닫기">✕</button>
       <div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>
     </aside>
   </main>
-
 <script>
-/* ===== 시트 연결 ===== */
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
 const POSTS_SHEET  = "Feed";
 const TAGMAP_SHEET = "TagMap";
 const ABOUT_SHEET  = "About";
-const GVIZ_BASE   = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
-const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
-const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
-const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
+const GVIZ_BASE    = sheet => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json${sheet ? `&sheet=${encodeURIComponent(sheet)}` : ""}`;
+const GVIZ_POSTS   = GVIZ_BASE(POSTS_SHEET);
+const GVIZ_TAGMAP  = GVIZ_BASE(TAGMAP_SHEET);
+const GVIZ_ABOUT   = GVIZ_BASE(ABOUT_SHEET);
 
-/* ===== DOM 핸들 ===== */
 const $list     = document.getElementById('list');
 const $media    = document.getElementById('media');
 const $closeBtn = document.getElementById('mediaClose');
 const $stories  = document.getElementById('storyBar');
 const aboutBtn  = document.getElementById('aboutBtn');
 
-/* 상태 */
 let TAGMAP = new Map();
 let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
-let PREV_MEDIA_HTML = null;   // About 등으로 바꾸기 전 상태 저장
+let PREV_MEDIA_HTML = null;
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
-/* ===== iOS 보조: 모달 열렸을 때 배경 터치 스크롤 방지 ===== */
-document.addEventListener('touchmove', (e)=>{
+document.addEventListener('touchmove', e => {
   if (document.body.classList.contains('modal-open') && !e.target.closest('#media')) {
     e.preventDefault();
   }
 }, {passive:false});
 
-/* ===== 모달 토글(모바일 전용) ===== */
 function openMediaModal(){
   if(!isMobile()) return;
   $media.classList.add('open');
@@ -270,34 +231,26 @@ function closeMediaModal(){
   document.body.classList.remove('modal-open');
   showCloseButton(false);
 }
-
-/* X 버튼 표시/숨김 (뷰포트 무관) */
 function showCloseButton(show){
   $closeBtn.style.display = show ? 'block' : 'none';
 }
-
-/* ESC로 모달 닫기 */
-document.addEventListener('keydown', (e)=>{
+document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && isMobile() && $media.classList.contains('open')){
     closeMediaModal();
   }
 });
-/* 닫기 버튼 동작: 모바일은 모달 닫기, 데스크톱은 이전 상태 복원 */
-$closeBtn.addEventListener('click', ()=>{
+$closeBtn.addEventListener('click', () => {
   if(isMobile()){
     closeMediaModal();
   }else{
     if(PREV_MEDIA_HTML){
       $media.innerHTML = PREV_MEDIA_HTML;
-      // 복원 후 닫기 버튼 노출 상태 다시 잡아주기
-      const btn = document.getElementById('mediaClose');
-      if(btn) btn.addEventListener('click', ()=> showCloseButton(false));
+      document.getElementById('mediaClose')?.addEventListener('click', ()=> showCloseButton(false));
     }
     showCloseButton(false);
   }
 });
 
-/* ===== 유틸: 셀에서 URL들 추출 ===== */
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
   const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
@@ -324,7 +277,6 @@ function cellToUrls(cell){
   return urls;
 }
 
-/* ===== 본문/태그맵/정렬 ===== */
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
@@ -333,7 +285,7 @@ const headerMap = {
 function parseGviz(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
   const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
-  const find = (aliases)=> labels.findIndex(l=>aliases.includes(l));
+  const find = aliases => labels.findIndex(l=>aliases.includes(l));
   const idx = {
     id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
     tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
@@ -395,7 +347,6 @@ function comparePosts(a, b){
   return String(b.id||"").localeCompare(String(a.id||""));
 }
 
-/* ===== Google 링크 처리 ===== */
 function extractGoogleIdAndType(url){
   const m = url.match(/https?:\/\/(?:drive|docs)\.google\.com\/(file|document|presentation|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/);
   if(m) return { kind:m[1], id:m[2] };
@@ -428,7 +379,6 @@ function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i
 function isGoogleHost(u){ return /https?:\/\/(?:drive|docs)\.google\.com/i.test(u); }
 function isDriveUC(u){ return /https?:\/\/drive\.google\.com\/uc\?/i.test(u); }
 
-/* uc 이미지 실패 시 프리뷰로 폴백 */
 function fallbackToPreview(img, rawUrl){
   const host = img.closest('.media-slide') || img.parentElement;
   if(!host) return;
@@ -439,7 +389,6 @@ function fallbackToPreview(img, rawUrl){
   host.appendChild(iframe);
 }
 
-/* ===== About 텍스트 ===== */
 function parseAbout(text){
   try {
     const json = JSON.parse(text.substring(47).slice(0,-2));
@@ -450,7 +399,6 @@ function parseAbout(text){
   }
 }
 
-/* ===== 렌더 ===== */
 function formatKDate(s){
   const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if(!m) return s || "날짜";
@@ -495,8 +443,6 @@ function render(posts){
       </section>
     `;
   }).join("");
-
-  /* 기본 자동 영상은 삭제 요청 → 첫 카드 미디어만 자동 노출 유지(원치 않으면 아래 두 줄 삭제) */
   const first = document.querySelector('article.card');
   if(first) showMedia(first);
 }
@@ -535,30 +481,23 @@ function applyTagFilter(tag){
   });
 }
 
-/* ===== 미디어 슬라이더 ===== */
 function showMedia($article){
   let mediaArr = [];
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
   catch { mediaArr = []; }
-
-  // 현재 상태 백업(About 복원용)
   PREV_MEDIA_HTML = $media.innerHTML;
-
   if(!mediaArr.length){
     $media.querySelector('.placeholder')?.remove?.();
     $media.insertAdjacentHTML('beforeend', `<div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>`);
     if(isMobile()) openMediaModal();
-    // 미디어 표시 시 X는 기본 숨김(모바일 모달일 때는 open에서 보임)
     if(!isMobile()) showCloseButton(false);
     return;
   }
-
   let idx = 0;
   function renderSlide(i){
     const urlRaw = mediaArr[i];
     let url = normalizeMediaUrl(urlRaw);
     let html = "";
-
     if(isYouTube(url)){
       const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
       html = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
@@ -576,8 +515,6 @@ function showMedia($article){
     }else{
       html = `<iframe width="100%" style="height:clamp(360px,70vh,1000px);border:0" src="${url}"></iframe>`;
     }
-
-    // 닫기 버튼 유지하며 교체
     const closeBtnHTML = $closeBtn.outerHTML;
     $media.innerHTML = `
       ${closeBtnHTML}
@@ -592,8 +529,6 @@ function showMedia($article){
         ` : ''}
       </div>
     `;
-
-    // 새 닫기 버튼에 이벤트 재연결
     const btn = document.getElementById('mediaClose');
     btn.addEventListener('click', ()=>{
       if(isMobile()){
@@ -606,41 +541,29 @@ function showMedia($article){
         showCloseButton(false);
       }
     });
-
-    // 모바일이면 모달 열고 X 보이기
     if(isMobile()){
       openMediaModal();
     }else{
-      // 데스크톱에서 일반 콘텐츠는 X 감춤 (요청은 About에 X, 일반 콘텐츠는 필요시만)
       showCloseButton(false);
     }
-
-    // 네비게이션
     $media.querySelectorAll('.media-dot').forEach(dot=>{
       dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
     });
     $media.querySelector('.media-nav.prev')?.addEventListener('click', ()=>{ if(idx>0){ idx--; renderSlide(idx); } });
     $media.querySelector('.media-nav.next')?.addEventListener('click', ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } });
   }
-
   renderSlide(idx);
 }
 
-/* ===== 상호작용 ===== */
 aboutBtn.addEventListener('mouseenter', () => { aboutBtn.style.borderBottomColor = "#111827"; });
 aboutBtn.addEventListener('mouseleave', () => { aboutBtn.style.borderBottomColor = "transparent"; });
 aboutBtn.addEventListener('click', () => {
-  // 현재 미디어 상태 백업
   PREV_MEDIA_HTML = $media.innerHTML;
-
-  // About 내용 표시
   const closeBtnHTML = $closeBtn.outerHTML;
   $media.innerHTML = `${closeBtnHTML}
     <div style="padding:32px 24px; font-size:18px; color:#222; background:#fff; border-radius:16px; max-width:600px; margin:auto; white-space:pre-line;">
       ${ABOUT_TEXT}
     </div>`;
-
-  // 닫기 버튼: 데스크톱에서도 표시 & 동작, 모바일은 모달 닫기
   const btn = document.getElementById('mediaClose');
   btn.addEventListener('click', ()=>{
     if(isMobile()){
@@ -653,7 +576,7 @@ aboutBtn.addEventListener('click', () => {
       showCloseButton(false);
     }
   });
-  showCloseButton(true);     // 데스크톱에서도 X 표시
+  showCloseButton(true);
   if(isMobile()) openMediaModal();
 });
 aboutBtn.addEventListener('keydown', (e) => { if(e.key === "Enter" || e.key === " "){ aboutBtn.click(); } });
@@ -674,7 +597,6 @@ document.addEventListener('click', (e)=>{
   }
 });
 
-/* ===== 데이터 로드 ===== */
 (async function(){
   try{
     const [rPosts, rTag, rAbout] = await Promise.all([
@@ -698,16 +620,13 @@ document.addEventListener('click', (e)=>{
     console.error(err);
   }
 })();
-
-/* 리사이즈 시 모달 상태 정리 (데스크톱으로 넓어졌을 때) */
 window.addEventListener('resize', ()=>{
   if(!isMobile()){
     $media.classList.remove('open');
     document.body.classList.remove('modal-open');
-    // 데스크톱 기본으로는 X 숨김
     showCloseButton(false);
   }
 });
-</script>
+  </script>
 </body>
 </html>

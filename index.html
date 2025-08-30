@@ -6,97 +6,111 @@
 <title>chirrup9</title>
 <style>
   :root{
-  --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
-}
-*{box-sizing:border-box}
+    --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
+  }
+  *{box-sizing:border-box}
 
-/* ▼ 사방 배경/여백 제거 + 가로스크롤 방지 */
-html, body { height:100%; }
-body{
-  margin:0;
-  background:transparent;            /* 바깥(사방) 배경 제거 */
-  color:var(--fg);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
-  overflow-x:hidden;
-}
+  /* ▼ 사방 배경/여백 제거 + 가로스크롤 방지 */
+  html, body { height:100%; }
+  body{
+    margin:0;
+    background:transparent;            /* 바깥(사방) 배경 제거 */
+    color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+    overflow-x:hidden;
+  }
 
-/* ▼ 중앙 2열을 화면 전체로 펼치기 */
-.stage{
-  width:100vw;                        /* 전체 너비 */
-  max-width:none;                     /* 고정폭 해제 */
-  margin:0;
-  padding:0;                          /* 바깥 패딩 제거 */
-  display:grid;
-  gap:0;
-  grid-template-columns:minmax(360px,560px) 1fr; 
-  align-items:start;
-}
+  /* ▼ 중앙 2열을 화면 전체로 펼치기 */
+  .stage{
+    width:100vw; max-width:none; margin:0; padding:0;
+    display:grid; gap:0;
+    grid-template-columns:minmax(360px,560px) 1fr; 
+    align-items:start;
+  }
 
-/* 왼쪽 패널(회색) – 내부 여백은 필요에 맞게 조절 */
-.left{
-  background:var(--panel);
-  border-radius:0;
-  padding: 30px;;
-  min-height:100vh;
-}
+  /* 왼쪽 패널 */
+  .left{
+    background:var(--panel);
+    border-radius:0;
+    padding:30px;
+    min-height:100vh;
+  }
 
-/* 오른쪽 미디어(초록) – 화면 높이 꽉, 상단 고정 */
-.right{
-  background:#bbfdc8;
-  color:#fff;
-  min-height:100vh;                   /* 전체 높이 */
-  display:flex; align-items:center; justify-content:center;
-  position:sticky; top:0;             /* 상단에 고정 */
-}
-.right .placeholder{opacity:.7; letter-spacing:.02em}
+  /* 오른쪽 미디어 */
+  .right{
+    background:#54dd22;
+    color:#fff;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    position:sticky; top:0;
+  }
+  .right .placeholder{opacity:.7; letter-spacing:.02em}
 
-/* 스토리형 태그(동그라미) */
-.stories{display:flex; gap:16px; padding:6px 0 18px; align-items:center}
-.dot{width:64px;height:64px;border-radius:999px;background:#bfbfbf;display:flex;align-items:center;justify-content:center}
-.dot span{font-size:13px}
+  /* 스토리형 태그 바 */
+  .stories{
+    display:flex; gap:16px; padding:12px 16px 18px; align-items:center; overflow-x:auto;
+  }
+  /* 동그라미 태그: 배경 이미지를 원형으로 표시 */
+  .story{
+    width:64px; height:64px; flex:0 0 auto; border-radius:999px;
+    background:#bfbfbf center/cover no-repeat;        /* 기본(이미지 없을 때) */
+    border:2px solid transparent; cursor:pointer; position:relative;
+    outline:none;
+  }
+  /* 인라인 style="--img:url('...')" 로 이미지 주입 */
+  .story[data-img="1"]{ background-image:var(--img); }
+  /* 활성/호버 효과 */
+  .story:hover, .story.active{ border-color:#111; box-shadow:0 0 0 2px #1112 inset; }
+  /* 접근성용 숨김 텍스트 */
+  .sr-only{ position:absolute; clip:rect(0,0,0,0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
+  /* 툴팁: 호버/포커스 시 태그 이름 노출 */
+  .story::after{
+    content: attr(data-label);
+    position:absolute; left:50%; bottom:-32px; transform:translateX(-50%);
+    background:#111; color:#fff; font-size:12px; line-height:1; padding:6px 8px;
+    border-radius:8px; white-space:nowrap; opacity:0; pointer-events:none;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .story:hover::after, .story:focus-visible::after{
+    opacity:1; transform:translateX(-50%) translateY(0);
+  }
 
-/* 날짜 */
-.date{margin:18px 0 8px; font-weight:700}
+  /* 날짜 */
+  .date{margin:18px 0 8px; font-weight:700}
 
-/* 카드 */
-article.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px 18px;
-  margin:10px 0 22px;
-}
-article h2{margin:0 0 8px; font-size:18px}
-.meta{font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; gap:8px; align-items:center}
-.pills{display:flex; gap:8px; flex-wrap:wrap}
-.pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px dashed #999; background:#e6e6e6}
-.content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
+  /* 카드 */
+  article.card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 18px;
+    margin:10px 0 22px;
+  }
+  article h2{margin:0 0 8px; font-size:18px}
+  .meta{font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; gap:8px; align-items:center}
+  .pills{display:flex; gap:8px; flex-wrap:wrap}
+  .pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px dashed #999; background:#e6e6e6}
+  .content{margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937}
 
-/* 반응형: 모바일은 세로 스택 */
-@media (max-width:900px){
-  .stage{grid-template-columns:1fr}
-  .right{position:static; min-height:240px; margin-top:0}
-}
-
+  /* 반응형: 모바일은 세로 스택 */
+  @media (max-width:900px){
+    .stage{grid-template-columns:1fr}
+    .right{position:static; min-height:240px; margin-top:0}
+  }
 </style>
 </head>
 <body>
   <main class="stage">
     <!-- 왼쪽: 태그/날짜/카드 -->
     <section class="left">
-      <div class="stories" id="storyBar">
-        <div class="dot"><span>태그</span></div>
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      </div>
+      <!-- 텍스트/도트 제거 → 비워둔 컨테이너만 -->
+      <div class="stories" id="storyBar"></div>
 
-      <div id="list">
-        <!-- 시트에서 불러오면 이 아래로 날짜와 카드가 렌더됩니다 -->
-      </div>
+      <div id="list"><!-- 시트에서 불러오면 이 아래로 날짜와 카드가 렌더됩니다 --></div>
     </section>
 
     <!-- 오른쪽: 이미지/영상 -->
-    <aside class="right" id="media">
-    </aside>
+    <aside class="right" id="media"><div class="placeholder">미디어</div></aside>
   </main>
 
 <script>
@@ -105,6 +119,15 @@ const SHEET_ID   = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";  // ← 스�
 const SHEET_NAME = "";                    // 탭 이름이 있으면 예: "블로그"
 const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` +
              (SHEET_NAME ? `&sheet=${encodeURIComponent(SHEET_NAME)}` : "");
+
+/* 태그 → 대표 이미지 URL 매핑 (원하는 이미지로 교체하세요) */
+const TAG_IMAGES = {
+  "전체": "",                       // 전체는 이미지 없어도 됨
+  "일상": "https://picsum.photos/seed/daily/200",
+  "음악": "https://picsum.photos/seed/music/200",
+  "여행": "https://picsum.photos/seed/travel/200",
+  // ...태그명:이미지URL 계속 추가
+};
 
 /* ===== 데이터 파싱(한국어/영어 헤더 자동 인식) ===== */
 const headerMap = {
@@ -143,11 +166,11 @@ function parseGviz(text){
 }
 
 /* ===== 렌더 ===== */
-const $list = document.getElementById('list');
+const $list  = document.getElementById('list');
 const $media = document.getElementById('media');
+const $stories = document.getElementById('storyBar');
 
 function formatKDate(s){
-  // "YYYY-MM-DD" 또는 "YYYY/M/D"를 "YYYY년 M월 D일"로 가볍게 포맷
   const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if(!m) return s || "날짜";
   return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
@@ -170,7 +193,7 @@ function render(posts){
       const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
       const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
       return `
-        <article class="card" data-id="${pid}" data-media="${encodeURIComponent(p.media)}">
+        <article class="card" data-id="${pid}" data-media="${encodeURIComponent(p.media)}" data-tags="${p.tags.join(',')}">
           <h2>${p.title}</h2>
           <div class="meta">
             <span class="pill">좋아요 ${p.likes ?? 0}</span>
@@ -187,10 +210,42 @@ function render(posts){
   if(first) showMedia(first);
 }
 
+/* 스토리(동그라미) 렌더 + 필터 */
+function renderStories(allTags){
+  const tags = ['전체', ...Array.from(allTags).sort()];
+  $stories.innerHTML = tags.map(t=>{
+    const img = TAG_IMAGES[t];
+    const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
+    return `
+      <button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}" title="${t}">
+        <span class="sr-only">${t}</span>
+      </button>
+    `;
+  }).join('');
+
+  const first = $stories.querySelector('[data-filter="전체"]');
+  if(first) first.classList.add('active');
+
+  $stories.querySelectorAll('.story').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tag = btn.getAttribute('data-filter');
+      applyTagFilter(tag === '전체' ? null : tag);
+    });
+  });
+}
+function applyTagFilter(tag){
+  document.querySelectorAll('#list article.card').forEach(a=>{
+    const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
+    a.style.display = (!tag || tag==='전체' || tags.includes(tag)) ? '' : 'none';
+  });
+}
+
 /* ===== 미디어 표시(오른쪽) ===== */
 function showMedia($article){
   const url = decodeURIComponent($article.getAttribute('data-media')||"");
-  if(!url){ $media.innerHTML = `<div class="placeholder">이미지영역</div>`; return; }
+  if(!url){ $media.innerHTML = `<div class="placeholder">미디어</div>`; return; }
   if(/(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url)){
     const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
     $media.innerHTML = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
@@ -202,7 +257,7 @@ function showMedia($article){
   }
 }
 
-/* 카드 클릭 → 오른쪽에 미디어 표시 */
+/* 클릭 핸들러: 카드 → 미디어 표시 */
 document.addEventListener('click', e=>{
   const card = e.target.closest('article.card');
   if(card) showMedia(card);
@@ -216,6 +271,7 @@ document.addEventListener('click', e=>{
     const text = await res.text();
     const rows = parseGviz(text).sort((a,b)=> (b.date||"").localeCompare(a.date||""));
     render(rows);
+    renderStories(new Set(rows.flatMap(r=>r.tags)));
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);

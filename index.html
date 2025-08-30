@@ -1,166 +1,282 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>chirrup9</title>
-  <style>
-    :root { --bg:#f9fafb; --fg:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb; }
-    *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:var(--bg);color:var(--fg)}
-    header{padding:40px 20px;text-align:center;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:1}
-    h1{margin:0 0 8px;font-size:28px} .muted{color:var(--muted)}
-    main{max-width:860px;margin:24px auto;padding:0 16px}
-    .tags{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
-    .tag{border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:#fff;cursor:pointer;font-size:14px}
-    .tag.active{border-color:#111;box-shadow:inset 0 0 0 1px #111}
-    article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0}
-    article h2{margin:0 0 6px;font-size:22px}
-    .meta{font-size:14px;color:var(--muted);margin-bottom:10px}
-    .post-tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-    .pill{font-size:12px;padding:4px 8px;border-radius:999px;background:#f3f4f6;border:1px solid var(--line)}
-    .like{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer}
-    .empty{padding:60px;text-align:center;color:var(--muted)}
-    .sr-only{position:absolute;clip:rect(0,0,0,0);clip-path:inset(50%);height:1px;width:1px;overflow:hidden;white-space:nowrap;border:0;padding:0;margin:-1px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>세솔의 블로그</title>
+<style>
+  :root{
+    --bg:#f7f7fb; --fg:#111827; --muted:#6b7280; --line:#e5e7eb; --card:#fff;
+    --accent:#111827;
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;}
+  header{position:sticky;top:0;z-index:3;background:#fff;border-bottom:1px solid var(--line);padding:18px 16px}
+  header h1{margin:0;font-size:20px}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  /* 중앙선 2열 레이아웃 */
+  .layout{display:grid;grid-template-columns:1fr 3px 1fr;gap:28px;align-items:start}
+  .divider{background:linear-gradient(180deg,#00000010,#00000020,#00000010);border-radius:2px;min-height:80vh}
+  /* 왼쪽: 상단 동그라미(태그) */
+  .stories{display:flex;gap:12px;padding:6px 0 18px;overflow:auto}
+  .story{flex:0 0 auto;width:62px;height:62px;border-radius:999px;border:2px solid #d1d5db;display:flex;align-items:center;justify-content:center;background:#fff;cursor:pointer}
+  .story.active{border-color:#111}
+  .story span{font-size:12px;text-align:center;line-height:1.1;padding:6px;color:#111;display:block}
+  /* 날짜 */
+  .date{margin:24px 0 10px;font-weight:700;color:#111}
+  /* 카드 */
+  article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:10px 0;box-shadow:0 6px 16px rgba(0,0,0,.04)}
+  article h2{margin:0 0 6px;font-size:18px}
+  .meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .post-tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .pill{font-size:12px;padding:4px 8px;border-radius:999px;background:#f3f4f6;border:1px solid var(--line)}
+  .content{white-space:pre-wrap;line-height:1.55}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .like{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  /* 오른쪽 미디어 패널 */
+  .media{position:sticky;top:84px;border:1px solid var(--line);border-radius:16px;background:#fff;min-height:300px;
+    display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .media img{max-width:100%;height:auto;display:block}
+  .media video{width:100%;height:auto;display:block}
+  .media iframe{width:100%;aspect-ratio:16/9;border:0}
+  .media .placeholder{color:var(--muted);padding:40px;text-align:center}
+  /* 반응형(모바일은 세로 스택) */
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;gap:16px}
+    .divider{display:none}
+    .media{position:static}
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1></h1>
-    <div id="filter" class="tags"></div>
-  </header>
+<header>
+  <div class="wrap">
+    <h1>세솔의 블로그</h1>
+    <div class="muted" style="color:var(--muted);font-size:13px">왼쪽: 태그/날짜/카드 · 오른쪽: 이미지/영상</div>
+  </div>
+</header>
 
-  <main id="posts"><div class="empty">불러오는 중…</div></main>
+<div class="wrap">
+  <div class="layout">
+    <!-- 왼쪽 -->
+    <section id="left">
+      <!-- 동그라미 태그 -->
+      <div id="storyBar" class="stories"></div>
+      <!-- 날짜별 게시글 -->
+      <div id="list"></div>
+    </section>
 
-  <script>
-    const SHEET_ID = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE"; // ← 여기를 본인 시트 ID로!
-    const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+    <!-- 중앙선 -->
+    <div class="divider" aria-hidden="true"></div>
 
-    // LocalStorage 기반 좋아요(사용자 로컬 저장, 전세계 합산 아님)
-    const likeKey = (id)=>`like-${id}`;
-    const getLocalLikes = (id, initial=0)=> Number(localStorage.getItem(likeKey(id)) ?? initial);
-    const incLocalLikes = (id)=> localStorage.setItem(likeKey(id), getLocalLikes(id,0)+1);
+    <!-- 오른쪽: 미디어 -->
+    <aside id="right">
+      <div id="media" class="media"><div class="placeholder">카드를 클릭하면 이미지/영상이 보입니다</div></div>
+    </aside>
+  </div>
+</div>
 
-    function parseGviz(text){
-      const json = JSON.parse(text.substring(47).slice(0,-2));
-      const cols = json.table.cols.map(c=>c.label?.toLowerCase());
-      return json.table.rows.map(r=>{
-        const obj = {};
-        cols.forEach((k,i)=> obj[k]= r.c[i]?.f ?? r.c[i]?.v ?? "");
-        // normalize
-        obj.id = String(obj.id||"").trim();
-        obj.title = String(obj.title||"").trim();
-        obj.body = String(obj.body||"").trim();
-        obj.tags = String(obj.tags||"").split(",").map(s=>s.trim()).filter(Boolean);
-        obj.likes = Number(obj.likes||0);
-        obj.date = String(obj.date||"");
-        obj.published = String(obj.published||"").toLowerCase()==="true";
-        return obj;
-      });
-    }
+<script>
+  /* === 설정 === */
+  const SHEET_ID   = "YOUR_SHEET_ID_HERE";         // ← 시트 ID로 교체
+  const SHEET_NAME = "";                            // 탭 이름이 있으면 입력 (예: "블로그")
+  const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` +
+               (SHEET_NAME ? `&sheet=${encodeURIComponent(SHEET_NAME)}` : "");
 
-    function render(posts){
-      const $posts = document.getElementById("posts");
-      if(!posts.length){ $posts.innerHTML = `<div class="empty">게시물이 없습니다.</div>`; return; }
+  // (선택) 전역 좋아요 집계용 Apps Script 웹앱 URL (없으면 로컬 저장소만 사용)
+  const GAS_ENDPOINT = ""; // 예: "https://script.google.com/macros/s/XXX/exec"
+  const SHEET_NAME_FOR_GAS = SHEET_NAME;
 
-      $posts.innerHTML = posts.map(p=>{
-        const likeCount = getLocalLikes(p.id, p.likes);
-        const tagHtml = p.tags.map(t=>`<span class="pill" data-tag="${t}">#${t}</span>`).join("");
-        return `
-        <article data-id="${p.id}" data-tags="${p.tags.join(",")}">
-          <h2>${p.title}</h2>
-          <div class="meta">${p.date}</div>
-          <div class="post-tags">${tagHtml}</div>
-          <div class="content">${p.body}</div>
-          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
-            <button class="like" data-like="${p.id}" aria-label="좋아요">
-              <span>👍</span><span class="count" id="count-${p.id}">${likeCount}</span>
-            </button>
-          </div>
-        </article>`;
-      }).join("");
+  /* === 유틸/파서 === */
+  const headerMap = {
+    id:        ['id','아이디'],
+    title:     ['title','제목'],
+    body:      ['body','본문','내용','content'],
+    tags:      ['tags','태그'],
+    likes:     ['likes','좋아요','like','하트'],
+    date:      ['date','날짜','일자'],
+    published: ['published','publish','공개','노출','게시'],
+    media:     ['media','이미지','영상','미디어','image','video','url']
+  };
 
-  // ...위 코드 중간에 추가:
-  const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzCe8Yxe5rBGvd_8FsFde1R9BLc7dutQDgU0N1Rg8x3S39c4MPPOa6FR-PPGOGkX1Mm/exec"; // ← 배포 URL
+  function parseGviz(text){
+    const json = JSON.parse(text.substring(47).slice(0,-2));
+    const labels = json.table.cols.map(c => String(c.label||'').toLowerCase().trim());
 
-  async function likeGlobal(id){
-    try{
-      const res = await fetch(`${GAS_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'GET' });
-      const json = await res.json();
-      if(json.ok) return json.likes;
-    }catch(e){ console.warn('GAS like failed', e); }
-    return null;
+    const colOf = (key)=>{
+      const aliases = headerMap[key];
+      const idx = labels.findIndex(l=>aliases.includes(l));
+      return idx === -1 ? null : idx;
+    };
+
+    const idx = {
+      id: colOf('id'), title: colOf('title'), body: colOf('body'), tags: colOf('tags'),
+      likes: colOf('likes'), date: colOf('date'), published: colOf('published'), media: colOf('media')
+    };
+
+    const rows = json.table.rows.map(r=>{
+      const get = (i)=> {
+        if(i===null) return "";
+        const cell = r.c[i];
+        return cell?.f ?? cell?.v ?? "";
+      };
+      const pubRaw = get(idx.published);
+      const published = (idx.published===null) ? true
+        : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
+
+      return {
+        id:   String(get(idx.id)   || "").trim(),
+        title:String(get(idx.title)|| "").trim(),
+        body: String(get(idx.body) || "").trim(),
+        tags: String(get(idx.tags) || "").split(",").map(s=>s.trim()).filter(Boolean),
+        likes:Number(get(idx.likes)|| 0),
+        date: String(get(idx.date) || "").trim(),
+        media:String(get(idx.media)|| "").trim(),
+        published
+      };
+    });
+
+    return rows.filter(r=>r.published && r.title);
   }
 
-  // 기존 좋아요 클릭 핸들러를 아래처럼 바꾸면 "전세계 합산"으로 동작:
+  /* === 렌더 === */
+  const $list  = document.getElementById('list');
+  const $media = document.getElementById('media');
+  const $stories = document.getElementById('storyBar');
+
+  function groupByDate(posts){
+    const map = new Map();
+    posts.forEach(p=>{
+      const key = p.date || "날짜 미상";
+      if(!map.has(key)) map.set(key, []);
+      map.get(key).push(p);
+    });
+    return Array.from(map.entries()).sort((a,b)=> (b[0]||"").localeCompare(a[0]||""));
+  }
+
+  const likeKey = id => `like-${id}`;
+  const getLocalLikes = (id, initial=0)=> Number(localStorage.getItem(likeKey(id)) ?? initial);
+  const incLocalLikes = (id)=> localStorage.setItem(likeKey(id), getLocalLikes(id,0)+1);
+
+  function renderList(posts){
+    if(!posts.length){ $list.innerHTML = `<div class="empty">게시물이 없습니다.</div>`; return; }
+
+    const grouped = groupByDate(posts);
+    $list.innerHTML = grouped.map(([date, items])=>{
+      const cards = items.map(p=>{
+        const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+        const likeCount = getLocalLikes(pid, p.likes);
+        const tagHtml = p.tags.map(t=>`<span class="pill" data-tag="${t}">#${t}</span>`).join("");
+
+        return `
+          <article data-id="${pid}" data-media="${encodeURIComponent(p.media)}" data-tags="${p.tags.join(',')}">
+            <h2>${p.title}</h2>
+            <div class="meta">${date}${p.likes?` · 좋아요 ${likeCount}`:""}</div>
+            <div class="post-tags">${tagHtml}</div>
+            <div class="content">${p.body}</div>
+            <div class="toolbar">
+              <button class="like" data-like="${pid}">
+                <span>👍</span><span id="count-${pid}">${likeCount}</span>
+              </button>
+              <button class="like" data-preview="${pid}">미디어 보기 ▶</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+      return `<div class="date">${date}</div>${cards}`;
+    }).join("");
+  }
+
+  function renderStories(allTags){
+    const tags = ['전체', ...Array.from(allTags).sort()];
+    $stories.innerHTML = tags.map(t=>`
+      <button class="story" data-filter="${t}">
+        <span>${t}</span>
+      </button>`).join("");
+    const first = $stories.querySelector('[data-filter="전체"]');
+    if(first) first.classList.add('active');
+  }
+
+  function applyTagFilter(tag){
+    document.querySelectorAll('#list article').forEach(a=>{
+      const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
+      a.style.display = (tag==='전체' || !tag) ? '' : (tags.includes(tag) ? '' : 'none');
+    });
+  }
+
+  function showMediaFromArticle($article){
+    if(!$article) return;
+    const url = decodeURIComponent($article.getAttribute('data-media') || "");
+    if(!url){ $media.innerHTML = `<div class="placeholder">이 게시물에 연결된 미디어가 없습니다.</div>`; return; }
+
+    if(/(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url)){
+      const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
+      $media.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }else if(/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)){
+      $media.innerHTML = `<video controls playsinline src="${url}"></video>`;
+    }else{
+      $media.innerHTML = `<img src="${url}" alt="" />`;
+    }
+  }
+
+  // 전역 클릭(좋아요 + 미디어 미리보기 + 태그 필터)
   document.addEventListener('click', async (e)=>{
-    const btn = e.target.closest('[data-like]');
-    if(!btn) return;
-    const id = btn.getAttribute('data-like');
-
-    // 낙관적 업데이트
-    const label = document.getElementById(`count-${id}`);
-    label.textContent = Number(label.textContent)+1;
-
-    // 서버(시트) 반영
-    const total = await likeGlobal(id);
-    if(total!=null) label.textContent = total;
+    // 태그 동그라미
+    const story = e.target.closest('.story');
+    if(story){
+      $stories.querySelectorAll('.story').forEach(s=>s.classList.remove('active'));
+      story.classList.add('active');
+      applyTagFilter(story.getAttribute('data-filter'));
+      return;
+    }
+    // 미디어 보기
+    const prevBtn = e.target.closest('[data-preview]');
+    if(prevBtn){
+      const pid = prevBtn.getAttribute('data-preview');
+      const art = document.querySelector(`#list article[data-id="${pid}"]`);
+      showMediaFromArticle(art);
+      return;
+    }
+    // 좋아요
+    const likeBtn = e.target.closest('[data-like]');
+    if(likeBtn){
+      const id = likeBtn.getAttribute('data-like');
+      const label = document.getElementById(`count-${id}`);
+      label.textContent = Number(label.textContent||0) + 1; // 낙관적
+      if(GAS_ENDPOINT){
+        try{
+          const qs = new URLSearchParams({ id, ...(SHEET_NAME_FOR_GAS? {sheet:SHEET_NAME_FOR_GAS} : {}) });
+          const res = await fetch(`${GAS_ENDPOINT}?${qs.toString()}`);
+          const json = await res.json();
+          if(json.ok && typeof json.likes==='number') label.textContent = json.likes;
+        }catch(err){ /* 네트워크 실패 시 로컬만 유지 */ }
+      }else{
+        incLocalLikes(id);
+      }
+      return;
+    }
+    // 카드 클릭 시도 → 미디어 표시
+    const art = e.target.closest('#list article');
+    if(art){ showMediaFromArticle(art); }
   });
 
-
-      // 태그 클릭 시 필터
-      document.querySelectorAll('.post-tags .pill').forEach(pill=>{
-        pill.addEventListener('click', ()=>{
-          const tag = pill.getAttribute('data-tag');
-          setActiveTag(tag);
-        });
-      });
+  async function load(){
+    try{
+      const r = await fetch(GVIZ);
+      const rows = parseGviz(await r.text())
+        .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+      renderList(rows);
+      renderStories(new Set(rows.flatMap(r=>r.tags)));
+      // 초기 미디어(첫 번째 카드)
+      const first = document.querySelector('#list article');
+      if(first) showMediaFromArticle(first);
+    }catch(e){
+      $list.innerHTML = `<div class="empty">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인)<br><small>${String(e)}</small></div>`;
+      console.error(e);
     }
-
-    function renderTagBar(allTags){
-      const $f = document.getElementById('filter');
-      const tags = Array.from(allTags).sort();
-      $f.innerHTML = ['전체', ...tags].map(t=>
-        `<button class="tag" data-filter="${t}">${t}</button>`
-      ).join('');
-      $f.querySelector('[data-filter="전체"]').classList.add('active');
-      $f.querySelectorAll('.tag').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          $f.querySelectorAll('.tag').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          const t = btn.getAttribute('data-filter');
-          applyFilter(t==='전체'? null : t);
-        });
-      });
-    }
-
-    function applyFilter(tag){
-      document.querySelectorAll('article').forEach(a=>{
-        const tags = a.getAttribute('data-tags').split(',').filter(Boolean);
-        a.style.display = (!tag || tags.includes(tag)) ? '' : 'none';
-      });
-    }
-
-    function setActiveTag(tag){
-      const btn = document.querySelector(`[data-filter="${tag}"]`);
-      if(btn){ btn.click(); }
-    }
-
-    async function load(){
-      try{
-        const res = await fetch(GVIZ);
-        const rows = parseGviz(await res.text())
-          .filter(r=>r.published && r.title)
-          .sort((a,b)=> (b.date||"").localeCompare(a.date||"")); // 최신순
-        render(rows);
-        const tagSet = new Set(rows.flatMap(r=>r.tags));
-        renderTagBar(tagSet);
-      }catch(e){
-        document.getElementById('posts').innerHTML =
-          `<div class="empty">시트를 불러오지 못했습니다. (웹에 게시 되었는지 확인)</div>`;
-        console.error(e);
-      }
-    }
-    load();
-  </script>
+  }
+  load();
+</script>
 </body>
 </html>

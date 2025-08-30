@@ -89,6 +89,34 @@
         });
       });
 
+  // ...위 코드 중간에 추가:
+  const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzCe8Yxe5rBGvd_8FsFde1R9BLc7dutQDgU0N1Rg8x3S39c4MPPOa6FR-PPGOGkX1Mm/exec"; // ← 배포 URL
+
+  async function likeGlobal(id){
+    try{
+      const res = await fetch(`${GAS_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'GET' });
+      const json = await res.json();
+      if(json.ok) return json.likes;
+    }catch(e){ console.warn('GAS like failed', e); }
+    return null;
+  }
+
+  // 기존 좋아요 클릭 핸들러를 아래처럼 바꾸면 "전세계 합산"으로 동작:
+  document.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('[data-like]');
+    if(!btn) return;
+    const id = btn.getAttribute('data-like');
+
+    // 낙관적 업데이트
+    const label = document.getElementById(`count-${id}`);
+    label.textContent = Number(label.textContent)+1;
+
+    // 서버(시트) 반영
+    const total = await likeGlobal(id);
+    if(total!=null) label.textContent = total;
+  });
+
+
       // 태그 클릭 시 필터
       document.querySelectorAll('.post-tags .pill').forEach(pill=>{
         pill.addEventListener('click', ()=>{

@@ -118,26 +118,22 @@
     width:100%; height:100%; display:flex; align-items:center; justify-content:center;
     position:relative;
   }
-  .media-nav{
-    position:absolute; top:50%; transform:translateY(-50%);
-    background:rgba(0,0,0,.3); color:#fff; border:none; border-radius:999px;
-    width:36px; height:36px; font-size:22px; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; z-index:2;
-    transition:background .15s;
-  }
-  .media-nav:hover{ background:rgba(0,0,0,.6);}
-  .media-nav.prev{ left:12px; }
-  .media-nav.next{ right:12px; }
   .media-indicator{
     position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
-    display:flex; gap:6px;
+    display:flex; gap:6px; align-items:center;
+    font-size:14px; color:#222; font-weight:500;
   }
   .media-dot{
     width:10px; height:10px; border-radius:999px; background:#fff; opacity:.4; cursor:pointer;
     border:1.5px solid #54dd22;
     transition:opacity .15s;
+    display:inline-block;
   }
   .media-dot.active{ opacity:1; background:#54dd22; }
+  .media-count{
+    margin-left:10px; font-size:13px; color:#222; opacity:.7;
+    background:rgba(255,255,255,.7); border-radius:8px; padding:2px 8px;
+  }
   @media (max-width:900px){
     .stage{grid-template-columns:1fr}
     .right{position:static; min-height:240px; margin-top:0}
@@ -365,7 +361,7 @@ function render(posts){
           <h2>${p.title}</h2>
           <div class="meta">
             <button class="pill like" type="button" data-like="${pid}">
-              👍 <span id="like-${pid}">${p.likes ?? 0}</span>
+              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
             </button>
             <span class="pills">${tags}</span>
           </div>
@@ -418,7 +414,7 @@ function applyTagFilter(tag){
   });
 }
 
-// 오른쪽 미디어(여러 개 지원, 슬라이더)
+// 오른쪽 미디어(여러 개 지원, 슬라이더: 원만 표시)
 function showMedia($article){
   let mediaArr = [];
   try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
@@ -448,16 +444,13 @@ function showMedia($article){
     }
     $media.innerHTML = `
       <div class="media-slider">
-        <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전" title="이전">&lt;</button>
         <div class="media-slide">${html}</div>
-        <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음" title="다음">&gt;</button>
         <div class="media-indicator">
           ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
+          <span class="media-count">${i+1} / ${mediaArr.length}</span>
         </div>
       </div>
     `;
-    $media.querySelector('.media-nav.prev').onclick = ()=>{ if(idx>0){ idx--; renderSlide(idx); } };
-    $media.querySelector('.media-nav.next').onclick = ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } };
     $media.querySelectorAll('.media-dot').forEach(dot=>{
       dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
     });

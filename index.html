@@ -141,6 +141,30 @@
   /* 미디어 모달(모바일) */
   #mediaModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45); z-index:3400; padding:18px; }
   #mediaModal.open{ display:flex; }
+
+  /* 모바일 미디어 모달 안의 내용도 둥글게 */
+#mediaModal .media-slider,
+#mediaModal .media-slide{
+  border-radius:16px;
+  overflow:hidden;            /* 둥근 모서리로 잘라내기 */
+  background:#54dd22;            /* 틴트 방지용(선택) */
+}
+
+/* 실제 미디어 요소들에 라운드 상속 */
+#mediaModal .media-slide > img,
+#mediaModal .media-slide > video,
+#mediaModal .media-slide > iframe{
+  border-radius:inherit;
+  display:block;
+}
+
+/* iOS Safari에서 드물게 iframe 라운드가 안 보일 때 보정(선택) */
+@supports (-webkit-touch-callout: none) {
+  #mediaModal .media-slide > iframe{
+    clip-path: inset(0 round 16px);
+  }
+}
+  
   .media-sheet{ width:min(96vw,800px); max-height:88vh; background:#fff; border-radius:16px; display:flex; flex-direction:column; }
   .media-head{ padding:12px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
   .media-head h3{ margin:0; font-size:16px; }
@@ -193,28 +217,6 @@
     </div>
   </div>
 
-  /* 모바일 미디어 모달 안의 내용도 둥글게 */
-#mediaModal .media-slider,
-#mediaModal .media-slide{
-  border-radius:16px;
-  overflow:hidden;            /* 둥근 모서리로 잘라내기 */
-  background:#54dd22;            /* 틴트 방지용(선택) */
-}
-
-/* 실제 미디어 요소들에 라운드 상속 */
-#mediaModal .media-slide > img,
-#mediaModal .media-slide > video,
-#mediaModal .media-slide > iframe{
-  border-radius:inherit;
-  display:block;
-}
-
-/* iOS Safari에서 드물게 iframe 라운드가 안 보일 때 보정(선택) */
-@supports (-webkit-touch-callout: none) {
-  #mediaModal .media-slide > iframe{
-    clip-path: inset(0 round 16px);
-  }
-}
 
 <script>
 /* ===== GAS 웹앱 URL ===== */

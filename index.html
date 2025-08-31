@@ -10,178 +10,170 @@
   @font-face {
     font-family: 'JoseonGulim';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
-    font-weight: 400; font-style: normal; font-display: swap;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
   }
+
   :root{
     --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
     --font-sans:'JoseonGulim',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
-    --chip-border:#6b7280; --accent:#54dd22;
+    --chip-border:#6b7280;
+    --accent:#54dd22;
   }
   *{box-sizing:border-box}
-  html, body { height:100%; overscroll-behavior:none; }
-  body{ margin:0; background:transparent; color:var(--fg); font-family:var(--font-sans); overflow-x:hidden; }
-  .stage{ width:100vw; display:grid; gap:0; grid-template-columns:minmax(360px,560px) 1fr; align-items:start; }
-  .left{ background:var(--panel); padding:30px; min-height:100vh; position:relative; overscroll-behavior:contain; }
-  .right{ background:#54dd22; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; position:sticky; top:0; overscroll-behavior:contain; }
-  .right .placeholder{ opacity:.7; letter-spacing:.02em }
+  html,body{height:100%}
+  body{
+    margin:0;background:transparent;color:var(--fg);
+    font-family:var(--font-sans);overflow-x:hidden;
+    overscroll-behavior-y:none;
+  }
 
-  /* 상단 링크들 */
-  .top-links{ display:flex; gap:16px; margin-bottom:18px; }
-  .link-btn{ font-weight:700; font-size:18px; cursor:pointer; transition:.15s; border-bottom:2px solid transparent; display:inline-block; }
-  .link-btn:hover,.link-btn:focus{ border-bottom-color:#111827; text-decoration:none; outline:none; }
+  .stage{
+    width:100vw;display:grid;gap:0;margin:0;padding:0;max-width:none;
+    grid-template-columns:minmax(360px,560px) 1fr; align-items:start;
+  }
+  .left{background:var(--panel);padding:30px;min-height:100vh;position:relative}
+  .right{
+    background:#54dd22;color:#fff;min-height:100vh;
+    position:sticky;top:0;display:flex;align-items:center;justify-content:center;
+  }
+  .right .placeholder{opacity:.7;letter-spacing:.02em}
 
-  /* 스토리(동그라미) */
-  .stories{ display:flex; gap:16px; padding:12px 16px 18px; align-items:center; overflow-x:auto; }
-  .story{ width:64px; height:64px; flex:0 0 auto; border-radius:999px; background:#bfbfbf center/cover no-repeat;
-    position:relative; overflow:hidden; border:0; padding:0; margin:0; appearance:none; outline:none; cursor:pointer; }
-  .story[data-img="1"]{ background-image:var(--img); }
-  .story::before{ content:""; position:absolute; inset:0; border-radius:inherit; background:rgba(0,0,0,.48);
-    opacity:0; transition:opacity .15s ease; pointer-events:none; }
-  .story::after{ content:attr(data-label); position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:12px; font-weight:600; letter-spacing:.02em; text-shadow:0 1px 2px rgba(0,0,0,.4);
-    opacity:0; transform:scale(.98); transition:opacity .15s ease, transform .15s ease; pointer-events:none; }
-  .story:hover::before,.story:focus-visible::before,.story:active::before{ opacity:1; }
-  .story:hover::after,.story:focus-visible::after,.story:active::after{ opacity:1; transform:scale(1); }
+  .about-link{font-weight:700;font-size:18px;cursor:pointer;transition:.15s;border-bottom:2px solid transparent;display:inline-block;margin-bottom:18px}
+  .about-link:hover,.about-link:focus{border-bottom-color:#111827;text-decoration:none}
 
-  .sr-only{ position:absolute; clip:rect(0,0,0,0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
-  .date{ margin:18px 0 8px; font-weight:700 }
-  .group{ margin-bottom:12px; }
-  article.card{ background:var(--card); border-radius:16px; padding:16px 18px; margin:10px 0 22px; }
-  article h2{ margin:0 0 8px; font-size:18px }
+  /* 스토리 태그 */
+  .stories{display:flex;gap:16px;padding:12px 16px 18px;align-items:center;overflow-x:auto}
+  .story{
+    width:64px;height:64px;flex:0 0 auto;border-radius:999px;
+    background:#bfbfbf center/cover no-repeat;position:relative;overflow:hidden;border:0;padding:0;margin:0;
+    appearance:none;outline:none;cursor:pointer;
+  }
+  .story[data-img="1"]{background-image:var(--img)}
+  .story::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.48);opacity:0;transition:opacity .15s;pointer-events:none}
+  .story::after{
+    content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:12px;font-weight:600;letter-spacing:.02em;text-align:center;padding:0 8px;text-shadow:0 1px 2px rgba(0,0,0,.4);
+    opacity:0;transform:scale(.98);transition:opacity .15s,transform .15s;pointer-events:none
+  }
+  .story:hover::before,.story:focus-visible::before,.story:active::before{opacity:1}
+  .story:hover::after,.story:focus-visible::after,.story:active::after{opacity:1;transform:scale(1)}
+  .sr-only{position:absolute;clip:rect(0,0,0,0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
 
-  /* 태그/좋아요 */
-  .meta{ font-size:12px; color:#cfd4dc; margin-bottom:8px; display:flex; gap:8px; align-items:center }
-  .pills{ display:flex; gap:8px; flex-wrap:wrap }
-  .pill{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px dashed var(--chip-border); color:var(--chip-border); background:#e6e6e6; transition:color .15s, border-color .15s; }
-  /* 태그는 호버 없음 */
-  .like.pill{ cursor:pointer; }
-  .like.pill:hover,.like.pill:focus-visible{ color:var(--accent); border-color:var(--accent); }
+  .date{margin:18px 0 8px;font-weight:700}
+  .group{margin-bottom:12px}
 
-  .content{ margin-top:8px; white-space:pre-wrap; line-height:1.55; color:#1f2937 }
+  article.card{background:var(--card);border-radius:16px;padding:16px 18px;margin:10px 0 22px}
+  article h2{margin:0 0 8px;font-size:18px}
+  .meta{font-size:12px;color:#cfd4dc;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+  .pills{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px dashed var(--chip-border);color:var(--chip-border);background:#e6e6e6}
+  .like.pill{cursor:pointer;transition:color .15s,border-color .15s}
+  .like.pill:hover,.like.pill:focus-visible{color:var(--accent);border-color:var(--accent)}
+  /* 태그는 호버 색 변경 없음 */
+  .pills .pill{pointer-events:none}
+
+  .content{margin-top:8px;white-space:pre-wrap;line-height:1.55;color:#1f2937}
 
   /* 미디어 슬라이더 */
-  .media-slider{ width:100%; max-width:600px; min-height:240px; position:relative; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08); border-radius:16px; overflow:hidden; }
-  .media-slide{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative; }
-  .media-nav{ position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.3); color:#fff; border:none; border-radius:999px; width:36px; height:36px; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; transition:background .15s; }
-  .media-nav:hover{ background:rgba(0,0,0,.6); }
-  .media-nav.prev{ left:12px; } .media-nav.next{ right:12px; }
-  .media-indicator{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:3; }
-  .media-dot{ width:12px; height:12px; border-radius:999px; background:#e6e6e6; opacity:.6; border:none; display:inline-block; }
-  .media-dot.active{ opacity:1; background:#54dd22; }
-
-  /* 닫기(X) */
-  .media-close{ position:absolute; top:10px; right:12px; width:36px; height:36px; line-height:34px; text-align:center;
-    border-radius:999px; border:1px dashed var(--chip-border); background:#e6e6e6; color:var(--chip-border);
-    font-size:20px; cursor:pointer; transition:color .15s, border-color .15s; z-index:1000; display:none; }
-  .media-close:hover,.media-close:focus-visible{ color:var(--accent); border-color:var(--accent); }
+  .media-slider{width:100%;max-width:600px;min-height:240px;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+  .media-slide{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+  .media-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);color:#fff;border:none;border-radius:999px;width:36px;height:36px;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s}
+  .media-nav:hover{background:rgba(0,0,0,.6)} .media-nav.prev{left:12px} .media-nav.next{right:12px}
+  .media-indicator{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;justify-content:center;z-index:3}
+  .media-dot{width:12px;height:12px;border-radius:999px;background:#e6e6e6;opacity:.6;cursor:pointer;border:none;transition:opacity .15s,background .15s;display:inline-block}
+  .media-dot.active{opacity:1;background:#54dd22}
 
   /* 방명록 */
-  .guest-wrap{ width:100%; max-width:680px; }
-  .guest-title{ font-size:22px; font-weight:700; margin:0 0 12px; color:#111; }
-  .guest-form{ background:#f9fafb; border:1px dashed var(--chip-border); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; }
-  .guest-form input,.guest-form textarea{ width:100%; border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-family:var(--font-sans); }
-  .guest-form button{ align-self:flex-end; background:#e6e6e6; border:1px dashed var(--chip-border); color:var(--chip-border); border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; transition:color .15s, border-color .15s; }
-  .guest-form button:hover,.guest-form button:focus-visible{ color:var(--accent); border-color:var(--accent); }
-  .guest-list{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
-  .guest-item{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; color:#1f2937; }
-  .guest-item .meta{ margin:0 0 6px; font-size:12px; color:#6b7280; gap:6px; }
+  .guestbook{margin:26px 0 8px}
+  .gb-title{font-weight:700;margin:0 0 10px}
+  .gb-form{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}
+  .gb-form input,.gb-form textarea{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--font-sans);font-size:14px
+  }
+  .gb-form textarea{height:90px;resize:vertical}
+  .gb-form button{
+    white-space:nowrap;border:1px solid var(--chip-border);background:#fff;color:var(--chip-border);
+    border-radius:10px;padding:10px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s
+  }
+  .gb-form button:hover{border-color:var(--accent);color:var(--accent)}
+  .gb-list{display:flex;flex-direction:column;gap:10px}
+  .gb-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .gb-item .who{font-size:12px;color:#6b7280;margin-bottom:6px}
+  .gb-empty{color:#6b7280}
 
-  /* 모바일 모달 */
   @media (max-width:900px){
-    .stage{ grid-template-columns:1fr }
-    .right{ position:fixed; inset:0; z-index:999; display:none; align-items:center; justify-content:center; padding:14px; }
-    .right.open{ display:flex; }
-    .media-slider{ max-width:100vw; }
-    body.modal-open{ overflow:hidden; }
+    .stage{grid-template-columns:1fr}
+    .right{position:static;min-height:240px;margin-top:0}
+    .media-slider{max-width:100vw}
   }
 </style>
 </head>
 <body>
   <main class="stage">
     <section class="left">
-      <div class="top-links">
-        <span id="aboutBtn" class="link-btn" tabindex="0">About</span>
-        <span id="guestBtn" class="link-btn" tabindex="0">Guestbook</span>
-      </div>
+      <span id="aboutBtn" class="about-link" tabindex="0">About</span>
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
+
+      <!-- 방명록 -->
+      <section class="guestbook" id="guestbook">
+        <h3 class="gb-title">Guestbook</h3>
+        <div class="gb-form">
+          <input id="gbName" type="text" placeholder="이름(선택)" />
+          <textarea id="gbMsg" placeholder="메시지를 남겨주세요"></textarea>
+          <button id="gbSend" type="button">등록</button>
+        </div>
+        <div id="gbError" style="color:#b00020;font-size:13px;margin-bottom:6px;"></div>
+        <div class="gb-list" id="gbList"><div class="gb-empty">방명록을 불러오는 중…</div></div>
+      </section>
     </section>
 
-    <aside class="right" id="media" aria-modal="true" role="dialog">
-      <button id="mediaClose" class="media-close" aria-label="닫기" title="닫기">✕</button>
-      <div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>
-    </aside>
+    <aside class="right" id="media"><div class="placeholder">미디어</div></aside>
   </main>
 
 <script>
-/* ===== 시트/백엔드 연결 ===== */
+/* ===== 상수 ===== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx0-YkglVKqumqFmczRCKASM2PcvjOYl_gyifjS5Y1b_8C91JGEFwZgVRcBF9AZ4WLV/exec';
+
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
 const POSTS_SHEET  = "Feed";
 const TAGMAP_SHEET = "TagMap";
 const ABOUT_SHEET  = "About";
-const GVIZ_BASE   = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
+
+const GVIZ_BASE = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
 const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-// ★ 방명록 웹앱 URL (배포 ID로 완성)
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJknqJdFQ-_mOikJKeYW_gqUDe29cqZ5OVyCAzLx7qPGcL9sVFtNpl7R9ZkovPWrn-/exec";
-
-/* ===== DOM ===== */
-const $list     = document.getElementById('list');
-const $media    = document.getElementById('media');
-const $stories  = document.getElementById('storyBar');
-const aboutBtn  = document.getElementById('aboutBtn');
-const guestBtn  = document.getElementById('guestBtn');
-
-/* 상태 */
-let TAGMAP = new Map();
-let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
-let PREV_MEDIA_HTML = null;
-
-const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
-/* 모바일 모달 제어 */
-function showCloseButton(show){
-  const btn = document.getElementById('mediaClose');
-  if(btn) btn.style.display = show ? 'block' : 'none';
-}
-function openMediaModal(){ if(isMobile()){ $media.classList.add('open'); document.body.classList.add('modal-open'); showCloseButton(true); } }
-function closeMediaModal(){ if(isMobile()){ $media.classList.remove('open'); document.body.classList.remove('modal-open'); showCloseButton(false); } }
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && isMobile() && $media.classList.contains('open')) closeMediaModal(); });
-document.getElementById('mediaClose').addEventListener('click', ()=>{
-  if(isMobile()) closeMediaModal();
-  else{ if(PREV_MEDIA_HTML){ $media.innerHTML = PREV_MEDIA_HTML; } showCloseButton(false); }
-});
-
 /* ===== 유틸 ===== */
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
-  const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
-  const h2 = f.match(/HYPERLINK\(\s*'([^']+)'/i);
+  const h1 = f.match(/HYPERLINK\\(\\s*"([^"]+)"/i);
+  const h2 = f.match(/HYPERLINK\\(\\s*'([^']+)'/i);
   if(h1?.[1]) return h1[1].trim();
   if(h2?.[1]) return h2[1].trim();
   const s = String(cell?.v ?? cell?.f ?? "").trim();
-  const m = s.match(/https?:\/\/[^\s)"><]+/);
+  const m = s.match(/https?:\\/\\/[^\\s)"><]+/);
   if(m?.[0]) return m[0];
   return s;
 }
 function cellToUrls(cell){
-  let s = typeof cell?.f === 'string' ? cell.f : String(cell?.v ?? cell?.f ?? '').trim();
-  const urls = [];
-  const re = /https?:\/\/[^\s)"><]+/g; let m;
-  while ((m = re.exec(s)) !== null) urls.push(m[0]);
-  if (!urls.length) {
-    s.split(/[,，\n\r]+/).forEach(part=>{
-      const hit = part.match(/https?:\/\/[^\s)"><]+/);
-      if (hit) urls.push(hit[0]);
+  const text = String(cell?.f ?? cell?.v ?? "").trim();
+  const out = [];
+  const re = /https?:\\/\\/[^\\s)"><]+/g;
+  let m; while ((m = re.exec(text)) !== null) out.push(m[0]);
+  if (!out.length){
+    text.split(/[,，\\n\\r]+/).forEach(p=>{
+      const hit = p.match(/https?:\\/\\/[^\\s)"><]+/);
+      if(hit) out.push(hit[0]);
     });
   }
-  return urls;
+  return out;
 }
-function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function normLabel(s){ return String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,''); }
 
-/* ===== 파싱 ===== */
+/* ===== 시트 파서 ===== */
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
@@ -199,8 +191,8 @@ function parseGviz(text){
   const rows = json.table.rows.map(r=>{
     const get = i => (i===-1? null : r.c[i]);
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
-    const published = (idx.published===-1) ? true : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
-    const mediaArr = cellToUrls(get(idx.media));
+    const published = (idx.published===-1) ? true
+      : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
     return {
       id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
       title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
@@ -208,18 +200,22 @@ function parseGviz(text){
       tags:String(get(idx.tags)?.v ?? get(idx.tags)?.f ?? "").split(",").map(s=>s.trim()).filter(Boolean),
       likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
       date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
-      media: mediaArr, published
+      media: cellToUrls(get(idx.media)),
+      published
     };
   });
   return rows.filter(r=>r.published && r.title);
 }
+
+/* ===== TagMap ===== */
+const norm = s=>String(s||'').toLowerCase().replace(/[\\s_\\-/]+/g,'');
 const TAGMAP_ALIAS = {
-  tag: new Set(['tag','tags','태그','name','label'].map(normLabel)),
-  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(normLabel))
+  tag: new Set(['tag','tags','태그','name','label'].map(norm)),
+  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(norm))
 };
 function parseTagMap(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
-  const labels = json.table.cols.map(c=>normLabel(c.label));
+  const labels = json.table.cols.map(c=>norm(c.label));
   let colTag = labels.findIndex(l=> TAGMAP_ALIAS.tag.has(l));
   let colImg = labels.findIndex(l=> TAGMAP_ALIAS.img.has(l));
   if(colTag === -1) colTag = 0;
@@ -234,307 +230,288 @@ function parseTagMap(text){
 }
 
 /* ===== 정렬 ===== */
-function dateKey(s){ const d = String(s||"").replace(/[^0-9]/g,""); if(!d) return ""; return d.padEnd(14,"0").slice(0,14); }
-function idNum(id){ const m = String(id||"").match(/(\d+)/g); return m ? Number(m[m.length-1]) : null; }
+function dateKey(s){ const d=String(s||'').replace(/[^0-9]/g,''); return d ? d.padEnd(14,'0').slice(0,14) : '' }
+function idNum(id){ const m=String(id||'').match(/(\\d+)/g); return m? Number(m[m.length-1]) : null }
 function comparePosts(a,b){
-  const da = dateKey(a.date), db = dateKey(b.date);
-  if(da !== db) return db.localeCompare(da);
-  const ia = idNum(a.id), ib = idNum(b.id);
+  const da=dateKey(a.date), db=dateKey(b.date);
+  if(da!==db) return db.localeCompare(da);
+  const ia=idNum(a.id), ib=idNum(b.id);
   if(ia!=null && ib!=null) return ib-ia;
-  if(ia!=null) return -1;
-  if(ib!=null) return  1;
-  return String(b.id||"").localeCompare(String(a.id||""));
+  if(ia!=null) return -1; if(ib!=null) return 1;
+  return String(b.id||'').localeCompare(String(a.id||''));
 }
 
-/* ===== Google 링크 처리 ===== */
+/* ===== 미디어 ===== */
 function extractGoogleIdAndType(url){
-  const m = url.match(/https?:\/\/(?:drive|docs)\.google\.com\/(file|document|presentation|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/);
+  const m = url.match(/https?:\\/\\/(?:drive|docs)\\.google\\.com\\/(file|document|presentation|spreadsheets)\\/d\\/([a-zA-Z0-9_-]+)/);
   if(m) return {kind:m[1], id:m[2]};
   const m2 = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/);
   if(m2) return {kind:'file', id:m2[1]};
-  const m3 = url.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+  const m3 = url.match(/thumbnail\\?id=([a-zA-Z0-9_-]+)/);
   if(m3) return {kind:'file', id:m3[1]};
-  return {kind:null, id:null};
+  return {kind:null,id:null};
 }
 function normalizeMediaUrl(raw){
-  const url = String(raw||"").trim(); if(!url) return "";
-  const {kind, id} = extractGoogleIdAndType(url);
-  if(kind === 'file' && id) return `https://drive.google.com/uc?export=view&id=${id}`;
+  const url = String(raw||'').trim();
+  if(!url) return '';
+  const {kind,id} = extractGoogleIdAndType(url);
+  if(kind==='file' && id) return `https://drive.google.com/uc?export=view&id=${id}`;
   return url;
 }
 function drivePreviewUrl(u){
-  const {kind, id} = extractGoogleIdAndType(u);
+  const {kind,id} = extractGoogleIdAndType(u);
   if(!id) return u;
-  if(kind==='document')     return `https://docs.google.com/document/d/${id}/preview`;
+  if(kind==='document') return `https://docs.google.com/document/d/${id}/preview`;
   if(kind==='presentation') return `https://docs.google.com/presentation/d/${id}/preview`;
   if(kind==='spreadsheets') return `https://docs.google.com/spreadsheets/d/${id}/preview`;
   return `https://drive.google.com/file/d/${id}/preview`;
 }
-function isYouTube(u){ return /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u); }
-function isVideo(u){ return /\.(mp4|webm|ogg)(\?.*)?$/i.test(u); }
-function isImageExt(u){ return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u); }
-function isGoogleHost(u){ return /https?:\/\/(?:drive|docs)\.google\.com/i.test(u); }
-function isDriveUC(u){ return /https?:\/\/drive\.google\.com\/uc\?/i.test(u); }
+const isYouTube = u => /(youtube\\.com\\/watch\\?v=|youtu\\.be\\/)/.test(u);
+const isVideo   = u => /\\.(mp4|webm|ogg)(\\?.*)?$/i.test(u);
+const isImage   = u => /\\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\\?.*)?$/i.test(u);
+const isGoogle  = u => /https?:\\/\\/(?:drive|docs)\\.google\\.com/i.test(u);
+const isDriveUC = u => /https?:\\/\\/drive\\.google\\.com\\/uc\\?/i.test(u);
+
 function fallbackToPreview(img, rawUrl){
   const host = img.closest('.media-slide') || img.parentElement;
   if(!host) return;
   const iframe = document.createElement('iframe');
   iframe.src = drivePreviewUrl(rawUrl);
-  iframe.style.cssText = 'width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff';
-  host.innerHTML = ''; host.appendChild(iframe);
+  iframe.style.cssText='width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff';
+  host.innerHTML=''; host.appendChild(iframe);
 }
 
-/* ===== 렌더 ===== */
-function formatKDate(s){
-  const m = String(s||"").match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if(!m) return s || "날짜";
-  return `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일`;
-}
+/* ===== DOM ===== */
+const $list = document.getElementById('list');
+const $media = document.getElementById('media');
+const $stories = document.getElementById('storyBar');
+const aboutBtn = document.getElementById('aboutBtn');
+
+let TAGMAP = new Map();
+let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
+
+/* ===== 렌더링 ===== */
+function formatKDate(s){ const m=String(s||'').match(/^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
 function groupByDate(posts){
   const map = new Map();
-  posts.forEach(p=>{ const key=p.date||"날짜"; if(!map.has(key)) map.set(key,[]); map.get(key).push(p); });
+  posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
 function render(posts){
-  if(!posts.length){ $list.innerHTML = `<div style="color:#6b7280">게시물이 없습니다.</div>`; return; }
+  if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
   const groups = groupByDate(posts);
   $list.innerHTML = groups.map(([date, items])=>{
     const cards = items.map(p=>{
-      const pid = p.id || '';
+      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
       const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
       return `
         <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
           <h2>${p.title}</h2>
           <div class="meta">
-            <button class="pill like" type="button" data-like="${pid}">좋아요 <span id="like-${pid}">${p.likes ?? 0}</span></button>
+            <button class="pill like" type="button" data-like="${pid}">
+              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+            </button>
             <span class="pills">${tags}</span>
           </div>
           <div class="content">${p.body}</div>
-        </article>`;
+        </article>
+      `;
     }).join("");
     return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
   }).join("");
-  const first = document.querySelector('article.card');
-  if(first) showMedia(first);
 }
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
   $stories.innerHTML = tags.map(t=>{
-    const key=t.toLowerCase(); const img = TAGMAP.get(key); const imgAttr = img?`data-img="1" style="--img:url('${img}')"`:"";
+    const key=t.toLowerCase(); const img=TAGMAP.get(key);
+    const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
     return `<button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}"><span class="sr-only">${t}</span></button>`;
   }).join('');
-  $stories.querySelector('[data-filter="전체"]')?.classList.add('active');
+  const first = $stories.querySelector('[data-filter="전체"]'); if(first) first.classList.add('active');
+
   $stories.querySelectorAll('.story').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       const tag = btn.getAttribute('data-filter');
-      applyTagFilter(tag==='전체'?null:tag);
+      applyTagFilter(tag==='전체'? null : tag);
     });
   });
 }
 function applyTagFilter(tag){
   document.querySelectorAll('#list article.card').forEach(a=>{
     const tags=a.getAttribute('data-tags').split(',').filter(Boolean);
-    a.style.display = (!tag || tag==='전체' || tags.includes(tag)) ? '' : 'none';
+    a.style.display = (!tag || tags.includes(tag)) ? '' : 'none';
   });
   document.querySelectorAll('#list .group').forEach(g=>{
-    const anyVisible = Array.from(g.querySelectorAll('article.card')).some(a => a.style.display !== 'none');
-    g.style.display = anyVisible ? '' : 'none';
+    const any = Array.from(g.querySelectorAll('article.card')).some(a=>a.style.display!=='none');
+    g.style.display = any ? '' : 'none';
   });
 }
 
 /* ===== 미디어 슬라이더 ===== */
 function showMedia($article){
-  let mediaArr = [];
-  try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); } catch {}
-  PREV_MEDIA_HTML = $media.innerHTML;
-  if(!mediaArr.length){
-    $media.innerHTML = `<button id="mediaClose" class="media-close">✕</button><div class="placeholder">✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>`;
-    document.getElementById('mediaClose').onclick = ()=>{ if(isMobile()) closeMediaModal(); else { $media.innerHTML = PREV_MEDIA_HTML; showCloseButton(false);} };
-    if(isMobile()) openMediaModal(); else showCloseButton(false);
-    return;
-  }
-  let idx = 0;
+  let mediaArr=[]; try{ mediaArr = JSON.parse($article.getAttribute('data-media')||'[]'); }catch{ mediaArr=[]; }
+  if(!mediaArr.length){ $media.innerHTML='<div class="placeholder">미디어</div>'; return; }
+
+  let idx=0;
   function renderSlide(i){
-    const urlRaw = mediaArr[i]; let url = normalizeMediaUrl(urlRaw); let html = "";
+    const raw = mediaArr[i]; let url = normalizeMediaUrl(raw); let html='';
     if(isYouTube(url)){
-      const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
+      const id = url.match(/(?:v=|youtu\\.be\\/)([^&?/]+)/)?.[1] || "";
       html = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0" src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>`;
     }else if(isVideo(url)){
       html = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
-    }else if(isImageExt(url) || isDriveUC(url)){
+    }else if(isImage(url) || isDriveUC(url)){
       const safe = url.replace(/'/g,"\\'");
       html = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block" onerror="fallbackToPreview(this,'${safe}')">`;
-    }else if(isGoogleHost(url)){
+    }else if(isGoogle(url)){
       html = `<iframe src="${drivePreviewUrl(url)}" style="width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff"></iframe>`;
     }else{
       html = `<iframe width="100%" style="height:clamp(360px,70vh,1000px);border:0" src="${url}"></iframe>`;
     }
     $media.innerHTML = `
-      <button id="mediaClose" class="media-close">✕</button>
       <div class="media-slider">
         <div class="media-slide">${html}</div>
-        <div class="media-indicator">${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}</div>
-        ${mediaArr.length>1?`<button class="media-nav prev" ${i===0?'disabled':''}>&#10094;</button><button class="media-nav next" ${i===mediaArr.length-1?'disabled':''}>&#10095;</button>`:''}
+        <div class="media-indicator">
+          ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
+        </div>
+        ${mediaArr.length>1?`
+          <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전">&#10094;</button>
+          <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음">&#10095;</button>`:''}
       </div>`;
-    document.getElementById('mediaClose').onclick = ()=>{ if(isMobile()) closeMediaModal(); else { $media.innerHTML = PREV_MEDIA_HTML; showCloseButton(false);} };
-    if(isMobile()) openMediaModal(); else showCloseButton(false);
-    $media.querySelectorAll('.media-dot').forEach(dot=> dot.onclick = ()=>{ idx=Number(dot.dataset.idx); renderSlide(idx); });
-    $media.querySelector('.media-nav.prev')?.addEventListener('click', ()=>{ if(idx>0){ idx--; renderSlide(idx); } });
-    $media.querySelector('.media-nav.next')?.addEventListener('click', ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } });
+    $media.querySelectorAll('.media-dot').forEach(dot=>{
+      dot.onclick=()=>{ idx=Number(dot.getAttribute('data-idx')); renderSlide(idx); };
+    });
+    const prevBtn=$media.querySelector('.media-nav.prev'), nextBtn=$media.querySelector('.media-nav.next');
+    if(prevBtn) prevBtn.onclick=()=>{ if(idx>0){idx--; renderSlide(idx);} };
+    if(nextBtn) nextBtn.onclick=()=>{ if(idx<mediaArr.length-1){idx++; renderSlide(idx);} };
   }
   renderSlide(idx);
 }
 
-/* ===== About 표시 ===== */
-aboutBtn.addEventListener('mouseenter', ()=> aboutBtn.style.borderBottomColor="#111827");
-aboutBtn.addEventListener('mouseleave', ()=> aboutBtn.style.borderBottomColor="transparent");
-aboutBtn.addEventListener('click', ()=>{
-  PREV_MEDIA_HTML = $media.innerHTML;
-  $media.innerHTML = `
-    <button id="mediaClose" class="media-close">✕</button>
-    <div style="padding:32px 24px; font-size:18px; color:#222; background:#fff; border-radius:16px; max-width:600px; margin:auto; white-space:pre-line;">
-      ${ABOUT_TEXT}
-    </div>`;
-  document.getElementById('mediaClose').onclick = ()=>{ if(isMobile()) closeMediaModal(); else { $media.innerHTML = PREV_MEDIA_HTML; showCloseButton(false);} };
-  showCloseButton(true); if(isMobile()) openMediaModal();
-});
-aboutBtn.addEventListener('keydown', (e)=>{ if(e.key==="Enter"||e.key===" ") aboutBtn.click(); });
-
-/* ===== Guestbook 표시/동작 ===== */
-async function fetchGuestbook(page=1,pageSize=50){
-  const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
-  const r = await fetch(url); if(!r.ok) throw new Error('listGuestbook HTTP '+r.status);
-  const j = await r.json(); if(!j.ok) throw new Error(j.error||'listGuestbook failed');
-  return j;
-}
-async function addGuestbook({name,message}){
-  const r = await fetch(WEB_APP_URL, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action:'addGuestbook', name, message})
-  });
-  if(!r.ok) throw new Error('addGuestbook HTTP '+r.status);
-  const j = await r.json(); if(!j.ok) throw new Error(j.error||'addGuestbook failed');
-  return j;
-}
-function renderGuestItem(it){
-  const nm = escapeHTML(it.name || '익명');
-  const tx = escapeHTML(it.message || '');
-  const ts = escapeHTML((it.createdAt||'').replace('T',' ').replace('Z',''));
-  return `<div class="guest-item">
-    <div class="meta"><strong>${nm}</strong><span>·</span><span>${ts}</span></div>
-    <div>${tx}</div>
-  </div>`;
-}
-async function showGuestbook(){
-  PREV_MEDIA_HTML = $media.innerHTML;
-  $media.innerHTML = `
-    <button id="mediaClose" class="media-close">✕</button>
-    <div class="guest-wrap">
-      <h3 class="guest-title">Guestbook</h3>
-      <form id="guestForm" class="guest-form">
-        <input type="text" name="name" placeholder="이름(선택)" maxlength="50" />
-        <textarea name="message" placeholder="방명록을 남겨주세요" required maxlength="1000"></textarea>
-        <button type="submit">등록</button>
-      </form>
-      <div id="guestList" class="guest-list" style="min-height:40px; margin-top:12px;">
-        <div class="guest-item" style="background:#f3f4f6;">불러오는 중…</div>
-      </div>
-    </div>`;
-  document.getElementById('mediaClose').onclick = ()=>{ if(isMobile()) closeMediaModal(); else { $media.innerHTML = PREV_MEDIA_HTML; showCloseButton(false);} };
-  showCloseButton(true); if(isMobile()) openMediaModal();
-
-  // 목록 로드
-  try{
-    const {data} = await fetchGuestbook(1, 50);
-    const html = data.length ? data.map(renderGuestItem).join('') : `<div class="guest-item" style="background:#f3f4f6;">첫 방명록을 남겨보세요 ✨</div>`;
-    document.getElementById('guestList').innerHTML = html;
-  }catch(err){
-    document.getElementById('guestList').innerHTML = `<div class="guest-item" style="background:#fff;color:#b91c1c;">목록을 불러오지 못했습니다.</div>`;
-    console.error(err);
-  }
-
-  // 제출
-  document.getElementById('guestForm').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const f = e.currentTarget;
-    const name = f.name.value || '';
-    const message = f.message.value || '';
-    if(!message.trim()) return;
-    const btn = f.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = '등록 중...';
-    try{
-      const r = await addGuestbook({name, message});
-      const item = {id:r.id, name, message, createdAt:r.createdAt};
-      const $list = document.getElementById('guestList');
-      $list.insertAdjacentHTML('afterbegin', renderGuestItem(item));
-      f.reset();
-    }catch(err){
-      alert('등록 실패: ' + err.message);
-      console.error(err);
-    }finally{
-      btn.disabled = false; btn.textContent = '등록';
-    }
-  });
-}
-guestBtn.addEventListener('mouseenter', ()=> guestBtn.style.borderBottomColor="#111827");
-guestBtn.addEventListener('mouseleave', ()=> guestBtn.style.borderBottomColor="transparent");
-guestBtn.addEventListener('click', showGuestbook);
-guestBtn.addEventListener('keydown', (e)=>{ if(e.key==="Enter"||e.key===" ") showGuestbook(); });
-
-/* ===== 좋아요(로컬만) ===== */
-document.addEventListener('click', (e)=>{
-  const likeBtn = e.target.closest('.like[data-like]');
+/* 카드/좋아요/미디어 */
+document.addEventListener('click', e=>{
+  const likeBtn=e.target.closest('.like[data-like]');
   if(likeBtn){
     e.stopPropagation();
-    const id = likeBtn.getAttribute('data-like');
-    const label = document.getElementById(`like-${id}`);
-    const prev = Number(label?.textContent || 0);
-    if(label) label.textContent = String(prev + 1);
+    const id=likeBtn.getAttribute('data-like');
+    const label=document.getElementById(`like-${id}`);
+    const prev=Number(label?.textContent||0);
+    if(label) label.textContent=String(prev+1); // (서버 합산이 필요하면 좋아요 API 붙이기)
     return;
   }
-  const card = e.target.closest('article.card');
+  const card=e.target.closest('article.card');
   if(card) showMedia(card);
 });
 
-/* ===== 데이터 로드 ===== */
+/* About 버튼 (우측 영역에 렌더, 닫기 X 포함) */
+aboutBtn.addEventListener('click', ()=>{
+  $media.innerHTML = `
+    <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
+      <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
+      ${ABOUT_TEXT}
+    </div>`;
+  const x=$media.querySelector('#aboutClose'); x&& (x.onclick=()=>{$media.innerHTML='<div class="placeholder">미디어</div>';});
+});
+
+/* ===== 방명록 ===== */
+const $gbName = document.getElementById('gbName');
+const $gbMsg  = document.getElementById('gbMsg');
+const $gbSend = document.getElementById('gbSend');
+const $gbList = document.getElementById('gbList');
+const $gbErr  = document.getElementById('gbError');
+
+async function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb='__gb_cb_'+Date.now();
+    window[cb]=(data)=>{ resolve(data); cleanup(); };
+    const s=document.createElement('script');
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    s.onerror=()=>{ cleanup(); reject(new Error('jsonp failed')); };
+    document.head.appendChild(s);
+    function cleanup(){ delete window[cb]; s.remove(); }
+  });
+}
+
+async function loadGuestbook(page=1, pageSize=30){
+  $gbErr.textContent='';
+  try{
+    const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
+    let data;
+    try{
+      const r = await fetch(url);           // 단순 GET
+      if(!r.ok) throw new Error('http');
+      data = await r.json();
+    }catch{
+      data = await jsonp(url);              // JSONP 폴백
+    }
+    if(!data.ok) throw new Error(data.error||'load failed');
+    renderGuestbook(data.data||[]);
+  }catch(err){
+    $gbList.innerHTML = `<div class="gb-empty">불러오기 실패: ${String(err.message||err)}</div>`;
+  }
+}
+function renderGuestbook(rows){
+  if(!rows.length){ $gbList.innerHTML='<div class="gb-empty">첫 방명록을 남겨보세요 ✍️</div>'; return; }
+  $gbList.innerHTML = rows.map(r=>{
+    const who = (r.name||'익명') + ' · ' + (r.createdAt? new Date(r.createdAt).toLocaleString() : '');
+    const esc = (s)=>String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    return `<div class="gb-item"><div class="who">${esc(who)}</div><div>${esc(r.message||'')}</div></div>`;
+  }).join('');
+}
+
+$gbSend.addEventListener('click', async ()=>{
+  $gbErr.textContent='';
+  const name = $gbName.value.trim();
+  const message = $gbMsg.value.trim();
+  if(!message){ $gbErr.textContent='메시지를 입력해 주세요.'; $gbMsg.focus(); return; }
+
+  try{
+    $gbSend.disabled = true; $gbSend.textContent = '등록 중…';
+    const body = new URLSearchParams({ action:'addGuestbook', name, message }).toString();
+    const r = await fetch(WEB_APP_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+      body
+    });
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error||'등록 실패');
+    $gbMsg.value=''; // 성공 시 초기화 후 다시 로드
+    await loadGuestbook(1, 30);
+  }catch(err){
+    $gbErr.textContent = '등록 실패: ' + String(err.message||err);
+  }finally{
+    $gbSend.disabled = false; $gbSend.textContent = '등록';
+  }
+});
+
+/* ===== 초기 로드 ===== */
 (async function(){
   try{
-    const [rPosts, rTag, rAbout] = await Promise.all([
+    const [rPosts,rTag,rAbout] = await Promise.all([
       fetch(GVIZ_POSTS),
       fetch(GVIZ_TAGMAP).catch(()=>null),
       fetch(GVIZ_ABOUT).catch(()=>null)
     ]);
     if(!rPosts?.ok) throw new Error(`POSTS HTTP ${rPosts?.status}`);
-    const [textPosts, textTag, textAbout] = await Promise.all([
+    const [textPosts,textTag,textAbout] = await Promise.all([
       rPosts.text(),
       rTag && rTag.ok ? rTag.text() : Promise.resolve(null),
       rAbout && rAbout.ok ? rAbout.text() : Promise.resolve(null)
     ]);
     const rows = parseGviz(textPosts).sort(comparePosts);
     TAGMAP = textTag ? parseTagMap(textTag) : new Map();
-    ABOUT_TEXT = textAbout ? (()=>{
-      try{ const j = JSON.parse(textAbout.substring(47).slice(0,-2)); return j.table.rows[0]?.c[0]?.v || j.table.rows[0]?.c[0]?.f || ABOUT_TEXT; }
-      catch{ return ABOUT_TEXT; }
-    })() : ABOUT_TEXT;
-
+    ABOUT_TEXT = (function(t){ try{ const j=JSON.parse(t.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; return c?.v||c?.f||ABOUT_TEXT; }catch{ return ABOUT_TEXT; } })(textAbout||'');
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
     console.error(err);
   }
+  // 방명록 불러오기
+  loadGuestbook(1,30);
 })();
-
-/* 리사이즈 시 모달 상태 정리 */
-window.addEventListener('resize', ()=>{
-  if(!isMobile()){
-    $media.classList.remove('open');
-    document.body.classList.remove('modal-open');
-    showCloseButton(false);
-  }
-});
 </script>
 </body>
 </html>

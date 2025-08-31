@@ -21,7 +21,9 @@
     --chip-border:#6b7280; --accent:#54dd22;
   }
   *{box-sizing:border-box}
-  html,body{height:100%; overscroll-behavior:none;} /* 스크롤 반동 제거 */
+
+  /* 배경 꽉차게 + 스크롤 반동 제거 */
+  html,body{height:100%; overscroll-behavior:none;}
   body{
     margin:0;background:var(--bg);color:var(--fg);
     font-family:var(--font-sans);overflow-x:hidden;
@@ -101,8 +103,7 @@
   .gb-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line) }
   .gb-head h3{ margin:0; font-size:18px; font-weight:700 }
   .gb-close{ border:0; background:transparent; font-size:22px; cursor:pointer; line-height:1 }
-
- .gb-body{ padding:14px 18px; overflow:auto; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+  .gb-body{ padding:14px 18px; overflow:auto; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
 
   /* 방명록 입력 폼 — 세로 정렬 */
   .gb-form{ display:flex; flex-direction:column; gap:12px; align-items:stretch; }
@@ -117,13 +118,15 @@
     border-radius:14px; padding:12px 16px; cursor:pointer; transition:color .15s,border-color .15s,background .15s;
   }
   .gb-form .gb-send:hover{ color:var(--accent); border-color:var(--accent); }
-.gb-card{
-  width:100%;                       /* ← 카드와 같은 폭 */
-  background:var(--card);           /* ← 리스트 카드와 동일 배경 */
-  border:1px solid var(--line);     /* ← 동일 테두리 */
-  border-radius:16px;               /* ← 동일 라운드(리스트 카드와 맞춤) */
-  padding:16px 18px;                /* ← 동일 패딩 */
-}
+
+  /* 입력 폼도 카드 톤으로 */
+  .gb-card{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 18px;
+  }
   .gb-list{ width:100%; display:flex; flex-direction:column; gap:10px }
   .gb-item{ width:100%; background:#b9dcfe; border:1px solid var(--line); border-radius:16px; padding:16px 18px }
   .gb-item .who{ font-size:12px; color:#6b7280; margin-bottom:6px }
@@ -165,7 +168,7 @@
   <div id="gbModal" aria-hidden="true">
     <div class="gb-sheet" role="dialog" aria-modal="true" aria-labelledby="gbTitle">
       <div class="gb-head">
-        <h3 id="gbTitle">Guestbook</h3>
+        <h3 id="gbTitle">@}>->---- ...</h3>
         <button class="gb-close" id="gbClose" aria-label="닫기">×</button>
       </div>
       <div class="gb-body">
@@ -186,7 +189,7 @@
   <div id="mediaModal" aria-hidden="true">
     <div class="media-sheet" role="dialog" aria-modal="true" aria-labelledby="mediaTitle">
       <div class="media-head">
-        <h3 id="mediaTitle">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</h3>
+        <h3 id="mediaTitle">‧₊˚.⋆·ฺ.∗̥✩⁺˚</h3>
         <button class="media-close" id="mediaClose" aria-label="닫기">×</button>
       </div>
       <div class="media-body" id="mediaBody">
@@ -498,14 +501,23 @@ document.addEventListener('click', e=>{
   }
 });
 
-/* About 버튼 (닫기 X 포함) */
+/* ===== About 버튼: 모바일=모달, 데스크톱=우측 패널 ===== */
 aboutBtnEl.addEventListener('click', ()=>{
-  $media.innerHTML = `
-    <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
-      <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
-      ${ABOUT_TEXT}
-    </div>`;
-  const x=$media.querySelector('#aboutClose'); x&& (x.onclick=()=>{$media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚</div>';});
+  const aboutHTML = `<div style="background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">${ABOUT_TEXT}</div>`;
+  if (isMobile()){
+    // 모바일: 모달 본문에 넣고 모달 오픈 (닫기는 상단 X 버튼으로)
+    $mediaBody.innerHTML = aboutHTML;
+    $mediaModal.classList.add('open');
+  } else {
+    // 데스크톱: 우측 패널에 넣고 내부 X 제공
+    $media.innerHTML = `
+      <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
+        <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
+        ${ABOUT_TEXT}
+      </div>`;
+    const x=$media.querySelector('#aboutClose');
+    if(x) x.onclick=()=>{$media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚</div>';};
+  }
 });
 
 /* ===== 방명록: 모달 열기/닫기 & 통신 ===== */

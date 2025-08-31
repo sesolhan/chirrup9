@@ -74,6 +74,21 @@
   article.card:focus-within{ background:#54dd22; }
   .group{ content-visibility:auto; contain-intrinsic-size: 200px; }
 
+  /* 부드러운 전환 */
+article.card{ transition: background-color .18s ease; }
+
+/* 데스크톱 :hover / 포커스 */
+article.card:hover,
+article.card:focus-within{ background:#54dd22; }
+
+/* 모바일 기본(:active) — 누르는 동안만 */
+@media (hover:none){
+  article.card:active{ background:#54dd22; }
+}
+
+/* 터치 스크립트가 붙여주는 상태 클래스(누를 때 ~ 떼고 120ms 유지) */
+article.card.is-pressing{ background:#54dd22; }
+
   article h2{margin:0 0 8px;font-size:18px}
   .meta{font-size:12px;color:#cfd4dc;margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pills{display:flex;gap:8px;flex-wrap:wrap}
@@ -222,6 +237,64 @@
 
 
 <script>
+
+  /* ===== 모바일 터치 호버(자연스러운 프레스 피드백) ===== */
+(()=>{
+  let pressTarget = null;
+  let clearTimer = null;
+  let startX = 0, startY = 0;
+
+  const isTouchLike = (e)=> e.pointerType === 'touch' || e.pointerType === 'pen';
+
+  function addPress(el){
+    if (!el) return;
+    pressTarget = el;
+    el.classList.add('is-pressing');
+  }
+  function clearPress(immediate=false){
+    if (clearTimer){ clearTimeout(clearTimer); clearTimer = null; }
+    if (!pressTarget) return;
+    const el = pressTarget;
+    pressTarget = null;
+    if (immediate){
+      el.classList.remove('is-pressing');
+    }else{
+      // 손을 뗀 뒤 약간의 여운(부드럽게 사라짐)
+      clearTimer = setTimeout(()=> el.classList.remove('is-pressing'), 120);
+    }
+  }
+
+  // 누르기 시작
+  document.addEventListener('pointerdown', (e)=>{
+    const card = e.target.closest && e.target.closest('article.card');
+    if (!card || !isTouchLike(e)) return;
+    startX = e.clientX; startY = e.clientY;
+    addPress(card);
+  }, {passive:true});
+
+  // 스크롤/드래그로 판단되면 즉시 취소(8px 이상 이동 시)
+  document.addEventListener('pointermove', (e)=>{
+    if (!pressTarget || !isTouchLike(e)) return;
+    const dx = Math.abs(e.clientX - startX);
+    const dy = Math.abs(e.clientY - startY);
+    if (dx > 8 || dy > 8) clearPress(true);
+  }, {passive:true});
+
+  // 손을 떼면 120ms 뒤 사라지게
+  document.addEventListener('pointerup', (e)=>{
+    if (!isTouchLike(e)) return;
+    clearPress(false);
+  }, {passive:true});
+
+  // 취소/포커스 이탈/스크롤 등 모든 경우 정리
+  ['pointercancel','pointerleave','scroll'].forEach(evt=>{
+    document.addEventListener(evt, ()=> clearPress(true), {passive:true});
+  });
+
+  // iOS 일부 환경에서 :active 동작 보조
+  document.addEventListener('touchmove', ()=> clearPress(true), {passive:true});
+})();
+
 /* ===== GAS 웹앱 URL ===== */
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxekAB99gxHGV-eUW-e7Tc5_plSIKSEUH9afAnlRy1k9EzxMloWvLOOkAsn8vAJ0HaF/exec';
 

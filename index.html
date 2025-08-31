@@ -158,7 +158,7 @@
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
     </section>
-    <aside class="right" id="media"><div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div></aside>
+    <aside class="right" id="media"><div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ᐝ.∗̥⁺˚</div></aside>
   </main>
 
   <!-- 🐘 플로팅 이모지 -->
@@ -199,8 +199,8 @@
   </div>
 
 <script>
-/* ===== GAS 웹앱 URL ===== */
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwHGFDbl6RrXzGDFydtqlBiXM9avl0uOp_uWSpW8DMjVj56mHOSPGG402XM0i8Uw4em/exec';
+/* ===== GAS 웹앱 URL (사용자 제공 ID) ===== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqRPgU_4wZlc-W3zQwD8eD682lSGBJz_5b3YAIlZTScDCXWdwcBZ9r9hrLFiSLZA6h/exec';
 
 /* ===== 시트 연결 ===== */
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
@@ -242,40 +242,22 @@ function cellToUrls(cell){
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
-  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url'],
-  pin:['pin','pinned','고정'],                      // ← 고정 열
-  pin_order:['pinorder','pin_order','pinrank','고정순서','순서'] // ← 고정 순서(선택)
+  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
 };
 function parseGviz(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
   const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
   const find = (aliases)=> labels.findIndex(l=>aliases.includes(l));
-
   const idx = {
     id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
     tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
-    published:find(headerMap.published), media:find(headerMap.media),
-    pin:find(headerMap.pin), pin_order:find(headerMap.pin_order)
+    published:find(headerMap.published), media:find(headerMap.media)
   };
-
-  const toBool = (x)=>{
-    const s = String(x ?? '').trim().toLowerCase();
-    return s==='true'||s==='1'||s==='y'||s==='yes'||s==='pin'||s==='고정';
-  };
-
   const rows = json.table.rows.map(r=>{
     const get = i => (i===-1? null : r.c[i]);
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
     const published = (idx.published===-1) ? true
       : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
-
-    const mediaArr = cellToUrls(get(idx.media));
-
-    const pin = idx.pin===-1 ? false : toBool(get(idx.pin)?.v ?? get(idx.pin)?.f);
-    const poRaw = (get(idx.pin_order)?.v ?? get(idx.pin_order)?.f);
-    const pinOrder = Number(poRaw);
-    const pinOrderNum = Number.isFinite(pinOrder) ? pinOrder : null;
-
     return {
       id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
       title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
@@ -283,10 +265,8 @@ function parseGviz(text){
       tags:String(get(idx.tags)?.v ?? get(idx.tags)?.f ?? "").split(",").map(s=>s.trim()).filter(Boolean),
       likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
       date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
-      media: mediaArr,
-      published,
-      pin,
-      pinOrder: pinOrderNum
+      media: cellToUrls(get(idx.media)),
+      published
     };
   });
   return rows.filter(r=>r.published && r.title);
@@ -391,6 +371,46 @@ let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
+/* ===== JSONP 공용 함수 ===== */
+async function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb='__cb_'+Math.random().toString(36).slice(2);
+    window[cb]=(data)=>{ resolve(data); cleanup(); };
+    const s=document.createElement('script');
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    s.onerror=()=>{ cleanup(); reject(new Error('jsonp failed')); };
+    document.head.appendChild(s);
+    function cleanup(){ try{ delete window[cb]; }catch(_){} s.remove(); }
+  });
+}
+
+/* ===== 좋아요 API 래퍼 (GAS 규격 반영) ===== */
+async function apiGetLikes(ids){
+  if(!ids.length) return {};
+  const base = `${WEB_APP_URL}?list=${encodeURIComponent(ids.join(','))}`;
+  try{
+    const r = await fetch(base);
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    return j.likes || {};
+  }catch{
+    const j = await jsonp(base);
+    return j.likes || {};
+  }
+}
+async function apiIncLike(id){
+  const url = `${WEB_APP_URL}?id=${encodeURIComponent(id)}&inc=1`;
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    return j;
+  }catch{
+    const j = await jsonp(url);
+    return j;
+  }
+}
+
 /* ===== 렌더링 ===== */
 function formatKDate(s){ const m=String(s||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
 function groupByDate(posts){
@@ -398,59 +418,44 @@ function groupByDate(posts){
   posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
-
 function render(posts){
   if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
-
-  // 1) 고정/일반 분리
-  const pinned = posts.filter(p=>p.pin);
-  const normal = posts.filter(p=>!p.pin);
-
-  // 2) 고정 정렬: PinOrder ↑ → (없으면 큰 값) → 기존(날짜↓, 같은날 id↓)
-  const BIG = 1e9;
-  pinned.sort((a,b)=>{
-    const ao = a.pinOrder ?? BIG, bo = b.pinOrder ?? BIG;
-    if(ao !== bo) return ao - bo;
-    return comparePosts(a,b);
-  });
-
-  // 3) 일반 정렬: 기존 규칙
-  normal.sort(comparePosts);
-
-  // 4) 섹션 HTML 빌더
-  const renderCards = (items)=> items.map(p=>{
-    const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
-    const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-    return `
-      <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
-        <h2>${p.title}</h2>
-        <div class="meta">
-          <button class="pill like" type="button" data-like="${pid}">
-            좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
-          </button>
-          <span class="pills">${tags}</span>
-        </div>
-        <div class="content">${p.body}</div>
-      </article>
-    `;
+  const groups = groupByDate(posts);
+  $list.innerHTML = groups.map(([date, items])=>{
+    const cards = items.map(p=>{
+      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+      const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
+      return `
+        <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
+          <h2>${p.title}</h2>
+          <div class="meta">
+            <button class="pill like" type="button" data-like="${pid}">
+              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+            </button>
+            <span class="pills">${tags}</span>
+          </div>
+          <div class="content">${p.body}</div>
+        </article>
+      `;
+    }).join("");
+    return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
   }).join("");
+}
 
-  // 5) 고정 섹션
-  const pinnedHtml = pinned.length ? `
-    <section class="group" data-date="__PINNED__">
-      <div class="date">📌 고정</div>
-      ${renderCards(pinned)}
-    </section>
-  ` : "";
-
-  // 6) 날짜 그룹 섹션
-  const groups = groupByDate(normal);
-  const normalHtml = groups.map(([date, items])=>
-    `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${renderCards(items)}</section>`
-  ).join("");
-
-  // 7) 삽입
-  $list.innerHTML = pinnedHtml + normalHtml;
+/* 좋아요 수 하이드레이션 */
+async function hydrateLikes(){
+  const cards = Array.from(document.querySelectorAll('article.card'));
+  const ids = cards.map(c=>c.getAttribute('data-id')).filter(Boolean);
+  if(!ids.length) return;
+  try{
+    const map = await apiGetLikes(ids);
+    ids.forEach(id=>{
+      const el = document.getElementById(`like-${id}`);
+      if(el && id in map) el.textContent = String(map[id]);
+    });
+  }catch(err){
+    console.warn('hydrateLikes failed', err);
+  }
 }
 
 function renderStories(allTags){
@@ -536,14 +541,29 @@ document.getElementById('mediaClose').addEventListener('click', ()=> $mediaModal
 $mediaModal.addEventListener('click', (e)=>{ if(e.target===$mediaModal) $mediaModal.classList.remove('open'); });
 
 /* 카드/좋아요/미디어 */
-document.addEventListener('click', e=>{
+document.addEventListener('click', async (e)=>{
   const likeBtn=e.target.closest('.like[data-like]');
   if(likeBtn){
     e.stopPropagation();
     const id=likeBtn.getAttribute('data-like');
     const label=document.getElementById(`like-${id}`);
     const prev=Number(label?.textContent||0);
-    if(label) label.textContent=String(prev+1); // (서버 합산 필요 시 좋아요 API 연동)
+
+    // 낙관적 업데이트
+    if(label) label.textContent = String(prev + 1);
+    likeBtn.disabled = true;
+
+    try{
+      const j = await apiIncLike(id); // GET ?id=...&inc=1
+      if(!j?.ok) throw new Error(j?.error||'fail');
+      if(label) label.textContent = String(j.likes);
+    }catch(err){
+      if(label) label.textContent = String(prev);
+      alert('좋아요 반영에 실패했어요.');
+      console.error(err);
+    }finally{
+      likeBtn.disabled = false;
+    }
     return;
   }
   const card=e.target.closest('article.card');
@@ -581,17 +601,6 @@ $gbFab.addEventListener('click', openGuestbook);
 $gbClose.addEventListener('click', closeGuestbook);
 $gbModal.addEventListener('click', (e)=>{ if(e.target===$gbModal) closeGuestbook(); });
 
-async function jsonp(url){
-  return new Promise((resolve, reject)=>{
-    const cb='__gb_cb_'+Date.now();
-    window[cb]=(data)=>{ resolve(data); cleanup(); };
-    const s=document.createElement('script');
-    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
-    s.onerror=()=>{ cleanup(); reject(new Error('jsonp failed')); };
-    document.head.appendChild(s);
-    function cleanup(){ delete window[cb]; s.remove(); }
-  });
-}
 async function loadGuestbook(page=1, pageSize=30){
   $gbErr.textContent='';
   $gbList.innerHTML = `<div class="gb-empty">방명록을 불러오는 중…</div>`;
@@ -599,11 +608,11 @@ async function loadGuestbook(page=1, pageSize=30){
     const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
     let data;
     try{
-      const r = await fetch(url);           // CORS 허용 시
+      const r = await fetch(url);
       if(!r.ok) throw new Error('http');
       data = await r.json();
     }catch{
-      data = await jsonp(url);              // JSONP 폴백
+      data = await jsonp(url); // JSONP 폴백
     }
     if(!data.ok) throw new Error(data.error||'load failed');
     renderGuestbook(data.data||[]);
@@ -653,12 +662,13 @@ $gbSend.addEventListener('click', async ()=>{
       rTag && rTag.ok ? rTag.text() : Promise.resolve(null),
       rAbout && rAbout.ok ? rAbout.text() : Promise.resolve(null)
     ]);
-    const rows = parseGviz(textPosts).sort(comparePosts); // 초기 1차 정렬(안전), render에서 고정/일반 재정렬
+    const rows = parseGviz(textPosts).sort(comparePosts);
     TAGMAP = textTag ? parseTagMap(textTag) : new Map();
     if (textAbout){
       try{ const j=JSON.parse(textAbout.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; ABOUT_TEXT = c?.v||c?.f||ABOUT_TEXT; }catch{}
     }
     render(rows);
+    await hydrateLikes();                    // ★ 서버에 저장된 좋아요 수 채워넣기
     renderStories(new Set(rows.flatMap(r=>r.tags)));
   }catch(err){
     $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;

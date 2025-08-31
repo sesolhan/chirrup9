@@ -152,7 +152,7 @@
       <div class="stories" id="storyBar"></div>
       <div id="list"></div>
     </section>
-    <aside class="right" id="media"><div class="placeholder">미디어</div></aside>
+    <aside class="right" id="media"><div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div></aside>
   </main>
 
   <!-- 🐘 플로팅 이모지 -->
@@ -409,7 +409,7 @@ function applyTagFilter(tag){
 /* ===== 미디어 슬라이더 ===== */
 function showMedia($article){
   let mediaArr=[]; try{ mediaArr = JSON.parse($article.getAttribute('data-media')||'[]'); }catch{ mediaArr=[]; }
-  if(!mediaArr.length){ $media.innerHTML='<div class="placeholder">미디어</div>'; return; }
+  if(!mediaArr.length){ $media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>'; return; }
 
   let idx=0;
   function renderSlide(i){
@@ -470,7 +470,7 @@ aboutBtnEl.addEventListener('click', ()=>{
       <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
       ${ABOUT_TEXT}
     </div>`;
-  const x=$media.querySelector('#aboutClose'); x&& (x.onclick=()=>{$media.innerHTML='<div class="placeholder">미디어</div>';});
+  const x=$media.querySelector('#aboutClose'); x&& (x.onclick=()=>{$media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>';});
 });
 
 /* ===== 방명록: 모달 열기/닫기 & 통신 ===== */

@@ -242,22 +242,40 @@ function cellToUrls(cell){
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
-  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
+  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url'],
+  pin:['pin','pinned','고정'],                      // ← 고정 열
+  pin_order:['pinorder','pin_order','pinrank','고정순서','순서'] // ← 고정 순서(선택)
 };
 function parseGviz(text){
   const json = JSON.parse(text.substring(47).slice(0,-2));
   const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
   const find = (aliases)=> labels.findIndex(l=>aliases.includes(l));
+
   const idx = {
     id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
     tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
-    published:find(headerMap.published), media:find(headerMap.media)
+    published:find(headerMap.published), media:find(headerMap.media),
+    pin:find(headerMap.pin), pin_order:find(headerMap.pin_order)
   };
+
+  const toBool = (x)=>{
+    const s = String(x ?? '').trim().toLowerCase();
+    return s==='true'||s==='1'||s==='y'||s==='yes'||s==='pin'||s==='고정';
+  };
+
   const rows = json.table.rows.map(r=>{
     const get = i => (i===-1? null : r.c[i]);
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
     const published = (idx.published===-1) ? true
       : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
+
+    const mediaArr = cellToUrls(get(idx.media));
+
+    const pin = idx.pin===-1 ? false : toBool(get(idx.pin)?.v ?? get(idx.pin)?.f);
+    const poRaw = (get(idx.pin_order)?.v ?? get(idx.pin_order)?.f);
+    const pinOrder = Number(poRaw);
+    const pinOrderNum = Number.isFinite(pinOrder) ? pinOrder : null;
+
     return {
       id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
       title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
@@ -265,8 +283,10 @@ function parseGviz(text){
       tags:String(get(idx.tags)?.v ?? get(idx.tags)?.f ?? "").split(",").map(s=>s.trim()).filter(Boolean),
       likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
       date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
-      media: cellToUrls(get(idx.media)),
-      published
+      media: mediaArr,
+      published,
+      pin,
+      pinOrder: pinOrderNum
     };
   });
   return rows.filter(r=>r.published && r.title);
@@ -378,29 +398,61 @@ function groupByDate(posts){
   posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
+
 function render(posts){
   if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
-  const groups = groupByDate(posts);
-  $list.innerHTML = groups.map(([date, items])=>{
-    const cards = items.map(p=>{
-      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
-      const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-      return `
-        <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
-          <h2>${p.title}</h2>
-          <div class="meta">
-            <button class="pill like" type="button" data-like="${pid}">
-              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
-            </button>
-            <span class="pills">${tags}</span>
-          </div>
-          <div class="content">${p.body}</div>
-        </article>
-      `;
-    }).join("");
-    return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
+
+  // 1) 고정/일반 분리
+  const pinned = posts.filter(p=>p.pin);
+  const normal = posts.filter(p=>!p.pin);
+
+  // 2) 고정 정렬: PinOrder ↑ → (없으면 큰 값) → 기존(날짜↓, 같은날 id↓)
+  const BIG = 1e9;
+  pinned.sort((a,b)=>{
+    const ao = a.pinOrder ?? BIG, bo = b.pinOrder ?? BIG;
+    if(ao !== bo) return ao - bo;
+    return comparePosts(a,b);
+  });
+
+  // 3) 일반 정렬: 기존 규칙
+  normal.sort(comparePosts);
+
+  // 4) 섹션 HTML 빌더
+  const renderCards = (items)=> items.map(p=>{
+    const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+    const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
+    return `
+      <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
+        <h2>${p.title}</h2>
+        <div class="meta">
+          <button class="pill like" type="button" data-like="${pid}">
+            좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+          </button>
+          <span class="pills">${tags}</span>
+        </div>
+        <div class="content">${p.body}</div>
+      </article>
+    `;
   }).join("");
+
+  // 5) 고정 섹션
+  const pinnedHtml = pinned.length ? `
+    <section class="group" data-date="__PINNED__">
+      <div class="date">📌 고정</div>
+      ${renderCards(pinned)}
+    </section>
+  ` : "";
+
+  // 6) 날짜 그룹 섹션
+  const groups = groupByDate(normal);
+  const normalHtml = groups.map(([date, items])=>
+    `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${renderCards(items)}</section>`
+  ).join("");
+
+  // 7) 삽입
+  $list.innerHTML = pinnedHtml + normalHtml;
 }
+
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
   $stories.innerHTML = tags.map(t=>{
@@ -505,11 +557,9 @@ document.addEventListener('click', e=>{
 aboutBtnEl.addEventListener('click', ()=>{
   const aboutHTML = `<div style="background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">${ABOUT_TEXT}</div>`;
   if (isMobile()){
-    // 모바일: 모달 본문에 넣고 모달 오픈 (닫기는 상단 X 버튼으로)
     $mediaBody.innerHTML = aboutHTML;
     $mediaModal.classList.add('open');
   } else {
-    // 데스크톱: 우측 패널에 넣고 내부 X 제공
     $media.innerHTML = `
       <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
         <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
@@ -603,7 +653,7 @@ $gbSend.addEventListener('click', async ()=>{
       rTag && rTag.ok ? rTag.text() : Promise.resolve(null),
       rAbout && rAbout.ok ? rAbout.text() : Promise.resolve(null)
     ]);
-    const rows = parseGviz(textPosts).sort(comparePosts);
+    const rows = parseGviz(textPosts).sort(comparePosts); // 초기 1차 정렬(안전), render에서 고정/일반 재정렬
     TAGMAP = textTag ? parseTagMap(textTag) : new Map();
     if (textAbout){
       try{ const j=JSON.parse(textAbout.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; ABOUT_TEXT = c?.v||c?.f||ABOUT_TEXT; }catch{}

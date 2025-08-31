@@ -26,7 +26,7 @@
   body{
     margin:0;background:transparent;color:var(--fg);
     font-family:var(--font-sans);overflow-x:hidden;
-    overscroll-behavior-y:none;
+    overscroll-behavior-y:none; /* 스크롤 반동 제거 */
   }
 
   .stage{
@@ -134,14 +134,14 @@
   </main>
 
 <script>
-/* ===== 상수 ===== */
+/* ===== GAS 웹앱 URL ===== */
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx0-YkglVKqumqFmczRCKASM2PcvjOYl_gyifjS5Y1b_8C91JGEFwZgVRcBF9AZ4WLV/exec';
 
+/* ===== 시트 연결 ===== */
 const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
 const POSTS_SHEET  = "Feed";
 const TAGMAP_SHEET = "TagMap";
 const ABOUT_SHEET  = "About";
-
 const GVIZ_BASE = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
 const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
@@ -150,23 +150,23 @@ const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 /* ===== 유틸 ===== */
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
-  const h1 = f.match(/HYPERLINK\\(\\s*"([^"]+)"/i);
-  const h2 = f.match(/HYPERLINK\\(\\s*'([^']+)'/i);
+  const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
+  const h2 = f.match(/HYPERLINK\(\s*'([^']+)'/i);
   if(h1?.[1]) return h1[1].trim();
   if(h2?.[1]) return h2[1].trim();
   const s = String(cell?.v ?? cell?.f ?? "").trim();
-  const m = s.match(/https?:\\/\\/[^\\s)"><]+/);
+  const m = s.match(/https?:\/\/[^\s)"><]+/);
   if(m?.[0]) return m[0];
   return s;
 }
 function cellToUrls(cell){
   const text = String(cell?.f ?? cell?.v ?? "").trim();
   const out = [];
-  const re = /https?:\\/\\/[^\\s)"><]+/g;
+  const re = /https?:\/\/[^\s)"><]+/g;
   let m; while ((m = re.exec(text)) !== null) out.push(m[0]);
   if (!out.length){
-    text.split(/[,，\\n\\r]+/).forEach(p=>{
-      const hit = p.match(/https?:\\/\\/[^\\s)"><]+/);
+    text.split(/[,，\n\r]+/).forEach(p=>{
+      const hit = p.match(/https?:\/\/[^\s)"><]+/);
       if(hit) out.push(hit[0]);
     });
   }
@@ -208,7 +208,7 @@ function parseGviz(text){
 }
 
 /* ===== TagMap ===== */
-const norm = s=>String(s||'').toLowerCase().replace(/[\\s_\\-/]+/g,'');
+const norm = s=>String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,'');
 const TAGMAP_ALIAS = {
   tag: new Set(['tag','tags','태그','name','label'].map(norm)),
   img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(norm))
@@ -231,7 +231,7 @@ function parseTagMap(text){
 
 /* ===== 정렬 ===== */
 function dateKey(s){ const d=String(s||'').replace(/[^0-9]/g,''); return d ? d.padEnd(14,'0').slice(0,14) : '' }
-function idNum(id){ const m=String(id||'').match(/(\\d+)/g); return m? Number(m[m.length-1]) : null }
+function idNum(id){ const m=String(id||'').match(/(\d+)/g); return m? Number(m[m.length-1]) : null }
 function comparePosts(a,b){
   const da=dateKey(a.date), db=dateKey(b.date);
   if(da!==db) return db.localeCompare(da);
@@ -243,11 +243,11 @@ function comparePosts(a,b){
 
 /* ===== 미디어 ===== */
 function extractGoogleIdAndType(url){
-  const m = url.match(/https?:\\/\\/(?:drive|docs)\\.google\\.com\\/(file|document|presentation|spreadsheets)\\/d\\/([a-zA-Z0-9_-]+)/);
+  const m = url.match(/https?:\/\/(?:drive|docs)\.google\.com\/(file|document|presentation|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/);
   if(m) return {kind:m[1], id:m[2]};
   const m2 = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/);
   if(m2) return {kind:'file', id:m2[1]};
-  const m3 = url.match(/thumbnail\\?id=([a-zA-Z0-9_-]+)/);
+  const m3 = url.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/);
   if(m3) return {kind:'file', id:m3[1]};
   return {kind:null,id:null};
 }
@@ -266,11 +266,11 @@ function drivePreviewUrl(u){
   if(kind==='spreadsheets') return `https://docs.google.com/spreadsheets/d/${id}/preview`;
   return `https://drive.google.com/file/d/${id}/preview`;
 }
-const isYouTube = u => /(youtube\\.com\\/watch\\?v=|youtu\\.be\\/)/.test(u);
-const isVideo   = u => /\\.(mp4|webm|ogg)(\\?.*)?$/i.test(u);
-const isImage   = u => /\\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\\?.*)?$/i.test(u);
-const isGoogle  = u => /https?:\\/\\/(?:drive|docs)\\.google\\.com/i.test(u);
-const isDriveUC = u => /https?:\\/\\/drive\\.google\\.com\\/uc\\?/i.test(u);
+const isYouTube = u => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u);
+const isVideo   = u => /\.(mp4|webm|ogg)(\?.*)?$/i.test(u);
+const isImage   = u => /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u);
+const isGoogle  = u => /https?:\/\/(?:drive|docs)\.google\.com/i.test(u);
+const isDriveUC = u => /https?:\/\/drive\.google\.com\/uc\?/i.test(u);
 
 function fallbackToPreview(img, rawUrl){
   const host = img.closest('.media-slide') || img.parentElement;
@@ -291,7 +291,7 @@ let TAGMAP = new Map();
 let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
 
 /* ===== 렌더링 ===== */
-function formatKDate(s){ const m=String(s||'').match(/^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
+function formatKDate(s){ const m=String(s||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
 function groupByDate(posts){
   const map = new Map();
   posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
@@ -358,7 +358,7 @@ function showMedia($article){
   function renderSlide(i){
     const raw = mediaArr[i]; let url = normalizeMediaUrl(raw); let html='';
     if(isYouTube(url)){
-      const id = url.match(/(?:v=|youtu\\.be\\/)([^&?/]+)/)?.[1] || "";
+      const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
       html = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0" src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>`;
     }else if(isVideo(url)){
       html = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
@@ -398,14 +398,14 @@ document.addEventListener('click', e=>{
     const id=likeBtn.getAttribute('data-like');
     const label=document.getElementById(`like-${id}`);
     const prev=Number(label?.textContent||0);
-    if(label) label.textContent=String(prev+1); // (서버 합산이 필요하면 좋아요 API 붙이기)
+    if(label) label.textContent=String(prev+1); // (서버 합산 필요 시 좋아요 API 연동)
     return;
   }
   const card=e.target.closest('article.card');
   if(card) showMedia(card);
 });
 
-/* About 버튼 (우측 영역에 렌더, 닫기 X 포함) */
+/* About 버튼 (닫기 X 포함) */
 aboutBtn.addEventListener('click', ()=>{
   $media.innerHTML = `
     <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
@@ -433,14 +433,13 @@ async function jsonp(url){
     function cleanup(){ delete window[cb]; s.remove(); }
   });
 }
-
 async function loadGuestbook(page=1, pageSize=30){
   $gbErr.textContent='';
   try{
     const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
     let data;
     try{
-      const r = await fetch(url);           // 단순 GET
+      const r = await fetch(url);           // CORS 허용 시
       if(!r.ok) throw new Error('http');
       data = await r.json();
     }catch{
@@ -460,7 +459,6 @@ function renderGuestbook(rows){
     return `<div class="gb-item"><div class="who">${esc(who)}</div><div>${esc(r.message||'')}</div></div>`;
   }).join('');
 }
-
 $gbSend.addEventListener('click', async ()=>{
   $gbErr.textContent='';
   const name = $gbName.value.trim();
@@ -502,7 +500,10 @@ $gbSend.addEventListener('click', async ()=>{
     ]);
     const rows = parseGviz(textPosts).sort(comparePosts);
     TAGMAP = textTag ? parseTagMap(textTag) : new Map();
-    ABOUT_TEXT = (function(t){ try{ const j=JSON.parse(t.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; return c?.v||c?.f||ABOUT_TEXT; }catch{ return ABOUT_TEXT; } })(textAbout||'');
+    // About 파싱
+    if (textAbout){
+      try{ const j=JSON.parse(textAbout.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; ABOUT_TEXT = c?.v||c?.f||ABOUT_TEXT; }catch{}
+    }
     render(rows);
     renderStories(new Set(rows.flatMap(r=>r.tags)));
   }catch(err){

@@ -82,8 +82,11 @@
   .content{margin-top:8px;white-space:pre-wrap;line-height:1.55;color:#1f2937}
 
   /* 미디어 슬라이더 */
-  .media-slider{width:100%;max-width:600px;min-height:240px;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+  .media-slider{width:100%;max-width:600px;min-height:240px;position:relative;display:flex;align-items:center;justify-content:center;background:#fff;;border-radius:16px;overflow:hidden}
   .media-slide{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+  .media-slide > img,
+  .media-slide > video,
+  .media-slide > iframe{ background:#fff; }
   .media-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);color:#fff;border:none;border-radius:999px;width:36px;height:36px;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s}
   .media-nav:hover{background:rgba(0,0,0,.6)} .media-nav.prev{left:12px} .media-nav.next{right:12px}
   .media-indicator{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;justify-content:center;z-index:3}

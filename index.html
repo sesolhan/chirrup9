@@ -402,7 +402,7 @@ function groupByDate(posts){
 function cardHTML(p, pinned){
   const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
   const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-  const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">📌 고정</span>` : "";
+  const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">➶</span>` : "";
   return `
     <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}" data-pinned="${pinned?1:0}">
       <h2>${p.title}</h2>
@@ -431,7 +431,8 @@ function render(posts){
   // 2) 상단 고정 섹션
   const pinnedSection = pinned.length ? `
     <section class="group" data-pinned="1">
-      <div class="date">📌 상단 고정</div>
+      <div class="date">➶
+      </div>
       ${pinned.map(p=>cardHTML(p, true)).join("")}
     </section>` : "";
 

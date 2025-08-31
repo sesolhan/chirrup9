@@ -115,15 +115,26 @@
     padding:16px 18px;
   }
 
-  .gb-form{ display:flex; gap:8px; align-items:flex-start }
-  .gb-form input,.gb-form textarea{
-    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
-    font-family:var(--font-sans); font-size:14px; background:#fff;
-  }
-  .gb-form textarea{ height:90px; resize:vertical }
-  .gb-form .gb-send{
-    white-space:nowrap;border:1px solid var(--chip-border);background:#fff;color:var(--chip-border);
-    border-radius:10px;padding:10px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s
+/* 방명록 폼: 상하(세로) 정렬 */
+.gb-form{
+  display:flex;
+  flex-direction: column;   /* ← 세로 정렬 */
+  gap:10px;
+  align-items: stretch;      /* 입력칸을 가로폭 꽉 차게 */
+}
+
+/* 입력칸은 전체 너비 */
+.gb-form input,
+.gb-form textarea{
+  width:100%;
+}
+
+/* 등록 버튼은 오른쪽 정렬(원하면 100%로 바꿔도 됨) */
+.gb-form .gb-send{
+  align-self: flex-end;      /* 오른쪽 끝으로 */
+  /* width:100%;             ← 버튼을 가로 꽉 차게 하고 싶다면 주석 해제 */
+  margin-top:4px;
+}
   }
   .gb-form .gb-send:hover{ border-color:var(--accent); color:var(--accent); }
 

@@ -28,22 +28,16 @@
   }
   *{box-sizing:border-box}
 
-  /* 배경 꽉차게 + 스크롤 반동 제거 */
   html,body{height:100%; overscroll-behavior:none;}
-  body{
-    margin:0;background:var(--bg);color:var(--fg);
-    font-family:var(--font-sans);overflow-x:hidden;
-  }
+  body{ margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);overflow-x:hidden; }
 
   .stage{
     width:100vw;display:grid;gap:0;margin:0;padding:0;max-width:none;
     grid-template-columns:minmax(360px,560px) 1fr; align-items:start;
   }
   .left{background:var(--panel);padding:30px;min-height:100vh;position:relative}
-  .right{
-    background:#54dd22;color:#fff;min-height:100vh;
-    position:sticky;top:0;display:flex;align-items:center;justify-content:center;
-  }
+  .right{ background:#54dd22;color:#fff;min-height:100vh; position:sticky;top:0;
+    display:flex;align-items:center;justify-content:center; }
   .right .placeholder{opacity:.7;letter-spacing:.02em}
 
   .about-link{font-weight:700;font-size:18px;cursor:pointer;transition:.15s;border-bottom:2px solid transparent;display:inline-block;margin-bottom:18px}
@@ -69,25 +63,25 @@
 
   .date{margin:18px 0 8px;font-weight:700}
   .group{margin-bottom:12px}
+  .group[data-pinned="1"] .date{display:flex;align-items:center;gap:6px}
 
   article.card{
     background:var(--card);border-radius:16px;padding:16px 18px;margin:10px 0 22px;
-    /* 오프스크린 스킵 */
     content-visibility:auto; contain-intrinsic-size: 300px;
   }
   .group{ content-visibility:auto; contain-intrinsic-size: 200px; }
 
   article h2{margin:0 0 8px;font-size:18px}
-  .meta{font-size:12px;color:#cfd4dc;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+  .meta{font-size:12px;color:#cfd4dc;margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pills{display:flex;gap:8px;flex-wrap:wrap}
   .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px dashed var(--chip-border);color:var(--chip-border);background:#e6e6e6}
+  .pill.pin{border-style:solid}
   .like.pill{cursor:pointer;transition:color .15s,border-color .15s}
   .like.pill:hover,.like.pill:focus-visible{color:var(--accent);border-color:var(--accent)}
   .pills .pill{pointer-events:none}
-
   .content{margin-top:8px;white-space:pre-wrap;line-height:1.55;color:#1f2937}
 
-  /* 미디어 슬라이더 (데스크톱 우측 패널/모바일 모달에서 공용) */
+  /* 미디어 슬라이더 */
   .media-slider{width:100%;max-width:600px;min-height:240px;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
   .media-slide{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
   .media-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);color:#fff;border:none;border-radius:999px;width:36px;height:36px;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s}
@@ -96,19 +90,16 @@
   .media-dot{width:12px;height:12px;border-radius:999px;background:#e6e6e6;opacity:.6;cursor:pointer;border:none;transition:opacity .15s,background .15s;display:inline-block}
   .media-dot.active{opacity:1;background:#54dd22}
 
-  /* 🐘 플로팅 버튼 — 이모지만 130×130 */
+  /* 🐘 플로팅 버튼 */
   .fab-elephant{
-    position:fixed;right:24px;bottom:24px;width:130px;height:130px;
-    background:transparent;border:none;box-shadow:none;border-radius:0;
-    display:flex;align-items:center;justify-content:center;
-    font-size:120px; line-height:1; cursor:pointer; z-index:3000;
+    position:fixed;right:24px;bottom:24px;width:130px;height:130px;background:transparent;border:none;box-shadow:none;border-radius:0;
+    display:flex;align-items:center;justify-content:center;font-size:120px; line-height:1; cursor:pointer; z-index:3000;
     -webkit-tap-highlight-color:transparent; transition:transform .18s ease;
   }
   .fab-elephant:hover{ transform:scale(1.04); }
 
   /* 방명록 모달 */
-  #gbModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-            background:rgba(0,0,0,.38); z-index:3500; padding:20px }
+  #gbModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.38); z-index:3500; padding:20px }
   #gbModal.open{ display:flex }
   .gb-sheet{ background:#ffffff; border-radius:16px; width:min(760px,92vw); max-height:85vh; display:flex; flex-direction:column; }
   .gb-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line) }
@@ -116,7 +107,6 @@
   .gb-close{ border:0; background:transparent; font-size:22px; cursor:pointer; line-height:1 }
   .gb-body{ padding:14px 18px; overflow:auto; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
 
-  /* 방명록 입력 폼 — 세로 정렬 */
   .gb-form{ display:flex; flex-direction:column; gap:12px; align-items:stretch; }
   .gb-form input,.gb-form textarea{
     width:100%; border:1px solid var(--line); border-radius:16px; padding:14px 16px;
@@ -130,34 +120,23 @@
   }
   .gb-form .gb-send:hover{ color:var(--accent); border-color:var(--accent); }
 
-  /* 입력 폼도 카드 톤으로 */
-  .gb-card{
-    width:100%;
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:16px 18px;
-    content-visibility:auto; contain-intrinsic-size: 160px;
-  }
+  .gb-card{ width:100%; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+    content-visibility:auto; contain-intrinsic-size: 160px; }
   .gb-list{ width:100%; display:flex; flex-direction:column; gap:10px }
-  .gb-item{
-    width:100%; background:#b9dcfe; border:1px solid var(--line); border-radius:16px; padding:16px 18px;
-    content-visibility:auto; contain-intrinsic-size: 120px;
-  }
+  .gb-item{ width:100%; background:#b9dcfe; border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+    content-visibility:auto; contain-intrinsic-size: 120px; }
   .gb-item .who{ font-size:12px; color:#6b7280; margin-bottom:6px }
   .gb-item .msg{ white-space:pre-wrap; line-height:1.55; color:#1f2937 }
   .gb-empty{ color:#6b7280 }
 
-  /* ▼ 모바일: 우측 미디어 패널 숨기고, 모달로 띄우기 */
   @media (max-width:900px){
     .stage{grid-template-columns:1fr}
     .right{display:none}
     .fab-elephant{ width:90px;height:90px;font-size:90px;right:16px;bottom:16px }
   }
 
-  /* 미디어 모달(모바일에서 사용) */
-  #mediaModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-               background:rgba(0,0,0,.45); z-index:3400; padding:18px; }
+  /* 미디어 모달(모바일) */
+  #mediaModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45); z-index:3400; padding:18px; }
   #mediaModal.open{ display:flex; }
   .media-sheet{ width:min(96vw,800px); max-height:88vh; background:#fff; border-radius:16px; display:flex; flex-direction:column; }
   .media-head{ padding:12px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
@@ -225,13 +204,11 @@ const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
 const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
 const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-/* ===== 유틸 ===== */
+/* ===== 유틸/DOM ===== */
 const $list = document.getElementById('list');
 const $media = document.getElementById('media');
 const $stories = document.getElementById('storyBar');
 const aboutBtnEl = document.getElementById('aboutBtn');
-
-/* Guestbook DOM */
 const $gbModal = document.getElementById('gbModal');
 const $gbFab   = document.getElementById('gbFab');
 const $gbClose = document.getElementById('gbClose');
@@ -240,8 +217,6 @@ const $gbMsg   = document.getElementById('gbMsg');
 const $gbSend  = document.getElementById('gbSend');
 const $gbList  = document.getElementById('gbList');
 const $gbErr   = document.getElementById('gbError');
-
-/* Media Modal DOM (모바일) */
 const $mediaModal = document.getElementById('mediaModal');
 const $mediaClose = document.getElementById('mediaClose');
 const $mediaBody  = document.getElementById('mediaBody');
@@ -302,11 +277,14 @@ async function apiIncLike(id){
   }
 }
 
-/* ===== GViz 파서 ===== */
+/* ===== GViz 파서(+ Pin 지원) ===== */
 const headerMap = {
   id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
   tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
-  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
+  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url'],
+  pin:['pin','pinned','고정','상단고정'],
+  pinOrder:['pin_order','pinorder','pinweight','고정순서','고정가중치'],
+  pinUntil:['pin_until','pinuntil','until','고정만료','고정기한']
 };
 function cellToUrl(cell){
   const f = typeof cell?.f === 'string' ? cell.f : "";
@@ -339,13 +317,21 @@ function parseGviz(text){
   const idx = {
     id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
     tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
-    published:find(headerMap.published), media:find(headerMap.media)
+    published:find(headerMap.published), media:find(headerMap.media),
+    pin:find(headerMap.pin), pinOrder:find(headerMap.pinOrder), pinUntil:find(headerMap.pinUntil)
+  };
+  const truthy = v => {
+    const s = String(v).trim().toLowerCase();
+    return ['1','y','yes','true','t','on','o','✔','✅'].includes(s);
   };
   const rows = json.table.rows.map(r=>{
     const get = i => (i===-1? null : r.c[i]);
     const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
     const published = (idx.published===-1) ? true
       : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
+    const pinRaw = (get(idx.pin)?.f ?? get(idx.pin)?.v);
+    const pinOrderRaw = (get(idx.pinOrder)?.v ?? get(idx.pinOrder)?.f);
+    const pinUntilRaw = (get(idx.pinUntil)?.v ?? get(idx.pinUntil)?.f);
     return {
       id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
       title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
@@ -354,13 +340,16 @@ function parseGviz(text){
       likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
       date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
       media: cellToUrls(get(idx.media)),
-      published
+      published,
+      pin: (idx.pin===-1 ? null : truthy(pinRaw)),
+      pinOrder: Number(pinOrderRaw ?? 0) || 0,
+      pinUntil: pinUntilRaw ? String(pinUntilRaw) : ""
     };
   });
   return rows.filter(r=>r.published && r.title);
 }
 
-/* ===== 정렬/유틸 ===== */
+/* ===== 정렬/핀 로직 ===== */
 function dateKey(s){ const d=String(s||'').replace(/[^0-9]/g,''); return d ? d.padEnd(14,'0').slice(0,14) : '' }
 function idNum(id){ const m=String(id||'').match(/(\d+)/g); return m? Number(m[m.length-1]) : null }
 function comparePosts(a,b){
@@ -373,38 +362,90 @@ function comparePosts(a,b){
 }
 function formatKDate(s){ const m=String(s||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
 
+const PIN_TAGS = new Set(['pin','고정','pinned','상단고정']);
+function hasPinTag(p){
+  return p.tags.some(t=>{
+    const x=t.toLowerCase();
+    if (PIN_TAGS.has(x)) return true;
+    // pin:10, pin(10), pin10 같은 가중치 태그도 고정으로 인식
+    return /^pin[:(]?\d+\)?$/i.test(x);
+  });
+}
+function extractTagWeight(p){
+  // pin:10 / pin(10) / pin10 → 10
+  for (const t of p.tags){
+    const x=t.toLowerCase();
+    let m = x.match(/^pin[:(]?(\d+)\)?$/i);
+    if(m) return Number(m[1])||0;
+  }
+  return 0;
+}
+function isPinned(p){
+  let flag = (p.pin === true) || (p.pin === null && hasPinTag(p)) || (p.pin === false && hasPinTag(p)); // 시트 Pin이 없으면 태그 판정 사용
+  if (!flag) return false;
+  if (p.pinUntil){
+    const d = new Date(p.pinUntil);
+    if (!isNaN(d)) { if (Date.now() > d.getTime()) return false; }
+  }
+  return true;
+}
+function pinWeight(p){
+  return p.pinOrder || extractTagWeight(p) || 0;
+}
+
 /* ===== 렌더 ===== */
 function groupByDate(posts){
   const map = new Map();
   posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
   return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
 }
+function cardHTML(p, pinned){
+  const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+  const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
+  const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">📌 고정</span>` : "";
+  return `
+    <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}" data-pinned="${pinned?1:0}">
+      <h2>${p.title}</h2>
+      <div class="meta">
+        ${pinBadge}
+        <button class="pill like" type="button" data-like="${pid}">
+          좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+        </button>
+        <span class="pills">${tags}</span>
+      </div>
+      <div class="content">${p.body}</div>
+    </article>`;
+}
 function render(posts){
   if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
-  const groups = groupByDate(posts);
-  // 문자열 합성은 브라우저 엔진에서 내부 최적화가 좋아 전체 innerHTML 1회 갱신이 가장 빠릅니다.
-  $list.innerHTML = groups.map(([date, items])=>{
-    const cards = items.map(p=>{
-      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
-      const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-      return `
-        <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
-          <h2>${p.title}</h2>
-          <div class="meta">
-            <button class="pill like" type="button" data-like="${pid}">
-              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
-            </button>
-            <span class="pills">${tags}</span>
-          </div>
-          <div class="content">${p.body}</div>
-        </article>
-      `;
-    }).join("");
+
+  // 1) 고정/비고정 분리
+  const pinned = [], normal = [];
+  posts.forEach(p=> (isPinned(p)? pinned: normal).push(p));
+  pinned.sort((a,b)=> {
+    const wa = pinWeight(a), wb = pinWeight(b);
+    if (wa!==wb) return wb-wa;
+    return comparePosts(a,b);
+  });
+
+  // 2) 상단 고정 섹션
+  const pinnedSection = pinned.length ? `
+    <section class="group" data-pinned="1">
+      <div class="date">📌 상단 고정</div>
+      ${pinned.map(p=>cardHTML(p, true)).join("")}
+    </section>` : "";
+
+  // 3) 나머지 날짜 그룹
+  const groups = groupByDate(normal);
+  const normalSection = groups.map(([date, items])=>{
+    const cards = items.map(p=>cardHTML(p,false)).join("");
     return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
   }).join("");
+
+  $list.innerHTML = pinnedSection + normalSection;
 }
 
-/* 스토리 렌더 + 이미지 지연 적용 */
+/* 스토리/필터 */
 function renderStories(allTags){
   const tags = ['전체', ...Array.from(allTags).sort()];
   $stories.innerHTML = tags.map(t=>{
@@ -412,7 +453,6 @@ function renderStories(allTags){
   }).join('');
   const first = $stories.querySelector('[data-filter="전체"]'); if(first) first.classList.add('active');
 
-  // 필터 이벤트
   $stories.querySelectorAll('.story').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
@@ -422,7 +462,6 @@ function renderStories(allTags){
     });
   });
 
-  // 태그 이미지는 TAGMAP 로드 후 주입(화면 최초 페인트에 영향 X)
   applyTagMapToStories();
 }
 function applyTagFilter(tag){
@@ -544,7 +583,6 @@ document.addEventListener('click', async (e)=>{
     const label=document.getElementById(`like-${id}`);
     const prev=Number(label?.textContent||0);
 
-    // 낙관적 업데이트 + 캐시 반영
     if(label) label.textContent = String(prev + 1);
     likeBtn.disabled = true;
 
@@ -569,7 +607,7 @@ document.addEventListener('click', async (e)=>{
   }
 });
 
-/* ===== About 버튼: 모바일=모달, 데스크톱=우측 패널 ===== */
+/* ===== About 버튼 ===== */
 aboutBtnEl.addEventListener('click', ()=>{
   const aboutHTML = `<div style="background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">${ABOUT_TEXT}</div>`;
   if (isMobile()){
@@ -644,17 +682,17 @@ $gbSend.addEventListener('click', async ()=>{
   finally{ $gbSend.disabled = false; $gbSend.textContent = '등록'; }
 });
 
-/* ===== 초기 로드: 먼저 피드 → 그 다음 유휴시간에 TagMap/ABOUT ===== */
+/* ===== 초기 로드 ===== */
 (async function init(){
   try{
-    // 1) 피드만 우선 로드
+    // 1) 피드 우선
     const rPosts = await fetch(GVIZ_POSTS);
     if(!rPosts?.ok) throw new Error(`POSTS HTTP ${rPosts?.status}`);
     const textPosts = await rPosts.text();
     const rows = parseGviz(textPosts).sort(comparePosts);
     render(rows);
 
-    // 2) 좋아요: 캐시 먼저 보정 → 서버로 동기화
+    // 2) 좋아요 캐시 → 서버 동기화
     const cards = Array.from(document.querySelectorAll('article.card'));
     const ids = cards.map(c=>c.getAttribute('data-id')).filter(Boolean);
     const cache = loadLikesCache();
@@ -674,10 +712,10 @@ $gbSend.addEventListener('click', async ()=>{
       }).catch(()=>{});
     }
 
-    // 3) 스토리 바(이미지는 나중에 주입)
+    // 3) 스토리 바
     renderStories(new Set(rows.flatMap(r=>r.tags)));
 
-    // 4) 유휴시간에 태그 이미지/ABOUT 로드 (초기 페인트 영향 최소화)
+    // 4) 유휴시간에 TagMap/ABOUT
     const idle = window.requestIdleCallback || function(cb){ setTimeout(cb, 1); };
     idle(async ()=>{
       try{
@@ -702,7 +740,15 @@ $gbSend.addEventListener('click', async ()=>{
             const map = new Map();
             json.table.rows.forEach(r=>{
               const t = (r.c[colTag]?.v ?? r.c[colTag]?.f ?? "").toString().trim();
-              const u = cellToUrl(r.c[colImg]);
+              const u = (()=>{
+                const cell = r.c[colImg]; const f = typeof cell?.f === 'string' ? cell.f : "";
+                const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
+                const h2 = f.match(/HYPERLINK\(\s*'([^']+)'/i);
+                if(h1?.[1]) return h1[1].trim();
+                if(h2?.[1]) return h2[1].trim();
+                const s = String(cell?.v ?? cell?.f ?? "").trim();
+                const m = s.match(/https?:\/\/[^\s)"><]+/); return m?.[0] || s;
+              })();
               if(t && u){ map.set(t.toLowerCase(), u); }
             });
             return map;

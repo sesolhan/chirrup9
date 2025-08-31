@@ -6,6 +6,7 @@
 <title>chirrup9</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
+  /* 웹폰트 */
   @font-face {
     font-family: 'JoseonGulim';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGu.woff') format('woff');
@@ -13,61 +14,76 @@
     font-style: normal;
     font-display: swap;
   }
+
   :root{
     --bg:#e6e6e6; --panel:#e6e6e6; --card:#b9dcfe; --fg:#111827; --muted:#6b7280; --line:#cfd4dc;
     --font-sans:'JoseonGulim',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
-    --chip-border:#6b7280;
-    --accent:#54dd22;
+    --chip-border:#6b7280; --accent:#54dd22;
   }
   *{box-sizing:border-box}
-  html, body {
-    height:100%;
-    background:var(--bg); /* 1. 배경색 꽉차게 */
-    overscroll-behavior:none; /* 2. 반동 제거 */
-  }
+  html,body{height:100%; overscroll-behavior:none;} /* 스크롤 반동 제거 */
   body{
-    margin:0;
-    color:var(--fg);
-    font-family:var(--font-sans);
-    overflow-x:hidden;
-    background:var(--bg); /* 1. 배경색 꽉차게 */
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:var(--font-sans);overflow-x:hidden;
   }
+
   .stage{
-    width:100vw; max-width:none; margin:0; padding:0;
-    display:grid; gap:0;
-    grid-template-columns:minmax(360px,560px) 1fr; 
-    align-items:start;
-    background:var(--bg); /* 1. 배경색 꽉차게 */
+    width:100vw;display:grid;gap:0;margin:0;padding:0;max-width:none;
+    grid-template-columns:minmax(360px,560px) 1fr; align-items:start;
   }
-  .left{
-    background:var(--panel);
-    padding:30px;
-    min-height:100vh;
-    position:relative;
-  }
-  .about-link{
-    font-weight:700; font-size:18px; cursor:pointer; transition:.15s;
-    border-bottom:2px solid transparent; display:inline-block; margin-bottom:18px;
-  }
-  .about-link:hover, .about-link:focus{
-    border-bottom-color:#111827;
-    text-decoration:none;
-  }
-  /* 3. 오른쪽 미디어 영역: 데스크톱만 보임, 모바일은 숨김 */
+  .left{background:var(--panel);padding:30px;min-height:100vh;position:relative}
   .right{
-    background:#54dd22;
-    color:#fff;
-    min-height:100vh;
-    display:flex; align-items:center; justify-content:center;
-    position:sticky; top:0;
+    background:#54dd22;color:#fff;min-height:100vh;
+    position:sticky;top:0;display:flex;align-items:center;justify-content:center;
   }
-  .right .placeholder{opacity:.7; letter-spacing:.02em}
-  @media (max-width:900px){
-    .stage{grid-template-columns:1fr;}
-    .right{display:none !important;} /* 3. 모바일에서 숨김 */
-    body.modal-open{overflow:hidden;} /* 모달 열릴 때 배경 스크롤 금지 */
+  .right .placeholder{opacity:.7;letter-spacing:.02em}
+
+  .about-link{font-weight:700;font-size:18px;cursor:pointer;transition:.15s;border-bottom:2px solid transparent;display:inline-block;margin-bottom:18px}
+  .about-link:hover,.about-link:focus{border-bottom-color:#111827;text-decoration:none}
+
+  /* 스토리 태그 */
+  .stories{display:flex;gap:16px;padding:12px 16px 18px;align-items:center;overflow-x:auto}
+  .story{
+    width:64px;height:64px;flex:0 0 auto;border-radius:999px;
+    background:#bfbfbf center/cover no-repeat;position:relative;overflow:hidden;border:0;padding:0;margin:0;
+    appearance:none;outline:none;cursor:pointer;
   }
-  /* 4. 코끼리 이모지 항상 우측 하단 */
+  .story[data-img="1"]{background-image:var(--img)}
+  .story::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.48);opacity:0;transition:opacity .15s;pointer-events:none}
+  .story::after{
+    content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:12px;font-weight:600;letter-spacing:.02em;text-align:center;padding:0 8px;text-shadow:0 1px 2px rgba(0,0,0,.4);
+    opacity:0;transform:scale(.98);transition:opacity .15s,transform .15s;pointer-events:none
+  }
+  .story:hover::before,.story:focus-visible::before,.story:active::before{opacity:1}
+  .story:hover::after,.story:focus-visible::after,.story:active::after{opacity:1;transform:scale(1)}
+  .sr-only{position:absolute;clip:rect(0,0,0,0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+
+  .date{margin:18px 0 8px;font-weight:700}
+  .group{margin-bottom:12px}
+
+  article.card{background:var(--card);border-radius:16px;padding:16px 18px;margin:10px 0 22px}
+  article h2{margin:0 0 8px;font-size:18px}
+  .meta{font-size:12px;color:#cfd4dc;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+  .pills{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px dashed var(--chip-border);color:var(--chip-border);background:#e6e6e6}
+  /* 좋아요만 호버 색 변경, 태그는 고정(호버 없음) */
+  .like.pill{cursor:pointer;transition:color .15s,border-color .15s}
+  .like.pill:hover,.like.pill:focus-visible{color:var(--accent);border-color:var(--accent)}
+  .pills .pill{pointer-events:none}
+
+  .content{margin-top:8px;white-space:pre-wrap;line-height:1.55;color:#1f2937}
+
+  /* 미디어 슬라이더 (데스크톱 우측 패널/모바일 모달에서 공용) */
+  .media-slider{width:100%;max-width:600px;min-height:240px;position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
+  .media-slide{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+  .media-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);color:#fff;border:none;border-radius:999px;width:36px;height:36px;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s}
+  .media-nav:hover{background:rgba(0,0,0,.6)} .media-nav.prev{left:12px} .media-nav.next{right:12px}
+  .media-indicator{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;justify-content:center;z-index:3}
+  .media-dot{width:12px;height:12px;border-radius:999px;background:#e6e6e6;opacity:.6;cursor:pointer;border:none;transition:opacity .15s,background .15s;display:inline-block}
+  .media-dot.active{opacity:1;background:#54dd22}
+
+  /* 🐘 플로팅 버튼 — 이모지만 130×130 */
   .fab-elephant{
     position:fixed;right:24px;bottom:24px;width:130px;height:130px;
     background:transparent;border:none;box-shadow:none;border-radius:0;
@@ -76,23 +92,54 @@
     -webkit-tap-highlight-color:transparent; transition:transform .18s ease;
   }
   .fab-elephant:hover{ transform:scale(1.04); }
-  @media (max-width:900px){ .fab-elephant{ width:90px;height:90px;font-size:90px;right:16px;bottom:16px } }
-  /* 모바일 미디어 모달 */
-  #mediaModal{
-    display:none; position:fixed; inset:0; z-index:4000;
-    background:rgba(0,0,0,.38); align-items:center; justify-content:center;
-    padding:18px;
+
+  /* 방명록 모달 */
+  #gbModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+            background:rgba(0,0,0,.38); z-index:3500; padding:20px }
+  #gbModal.open{ display:flex }
+  .gb-sheet{ background:#ffffff; border-radius:16px; width:min(760px,92vw); max-height:85vh; display:flex; flex-direction:column; }
+  .gb-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line) }
+  .gb-head h3{ margin:0; font-size:18px; font-weight:700 }
+  .gb-close{ border:0; background:transparent; font-size:22px; cursor:pointer; line-height:1 }
+
+  .gb-body{ padding:14px 18px; overflow:auto; display:flex; flex-direction:column; gap:12px }
+
+  /* 방명록 입력 폼 — 세로 정렬 */
+  .gb-form{ display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+  .gb-form input,.gb-form textarea{
+    width:100%; border:1px solid var(--line); border-radius:16px; padding:14px 16px;
+    font-family:var(--font-sans); font-size:16px; background:#b9dcfe;
   }
+  .gb-form input{ min-height:56px; }
+  .gb-form textarea{ min-height:140px; resize:vertical; line-height:1.55; }
+  .gb-form .gb-send{
+    align-self:flex-end; border:1px solid var(--chip-border); background:#fff; color:var(--chip-border);
+    border-radius:14px; padding:12px 16px; cursor:pointer; transition:color .15s,border-color .15s,background .15s;
+  }
+  .gb-form .gb-send:hover{ color:var(--accent); border-color:var(--accent); }
+  .gb-card{ border-radius:20px; padding:20px 22px; }
+  .gb-list{ display:flex; flex-direction:column; gap:10px }
+  .gb-item{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px }
+  .gb-item .who{ font-size:12px; color:#6b7280; margin-bottom:6px }
+  .gb-item .msg{ white-space:pre-wrap; line-height:1.55; color:#1f2937 }
+  .gb-empty{ color:#6b7280 }
+
+  /* ▼ 모바일: 우측 미디어 패널 숨기고, 모달로 띄우기 */
+  @media (max-width:900px){
+    .stage{grid-template-columns:1fr}
+    .right{display:none}
+    .fab-elephant{ width:90px;height:90px;font-size:90px;right:16px;bottom:16px }
+  }
+
+  /* 미디어 모달(모바일에서 사용) */
+  #mediaModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+               background:rgba(0,0,0,.45); z-index:3400; padding:18px; }
   #mediaModal.open{ display:flex; }
-  .media-modal-content{
-    background:#fff; border-radius:18px; max-width:96vw; width:100%; max-height:90vh; overflow:auto;
-    box-shadow:0 4px 32px rgba(0,0,0,.18);
-    position:relative;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-  }
-  .media-modal-close{
-    position:absolute; top:10px; right:14px; font-size:28px; background:transparent; border:none; color:#222; cursor:pointer; z-index:10;
-  }
+  .media-sheet{ width:min(96vw,800px); max-height:88vh; background:#fff; border-radius:16px; display:flex; flex-direction:column; }
+  .media-head{ padding:12px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+  .media-head h3{ margin:0; font-size:16px; }
+  .media-close{ border:0; background:transparent; font-size:22px; cursor:pointer; line-height:1; }
+  .media-body{ padding:16px; overflow:auto; }
 </style>
 </head>
 <body>
@@ -104,111 +151,452 @@
     </section>
     <aside class="right" id="media"><div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div></aside>
   </main>
-  <!-- 4. 코끼리 이모지 플로팅 -->
+
+  <!-- 🐘 플로팅 이모지 -->
   <button class="fab-elephant" id="gbFab" aria-label="Guestbook">🐘</button>
-  <!-- 3. 모바일 미디어 모달 -->
-  <div id="mediaModal" aria-modal="true" role="dialog">
-    <div class="media-modal-content" id="mediaModalContent">
-      <button class="media-modal-close" id="mediaModalClose" aria-label="닫기">×</button>
-      <div id="mediaModalInner"></div>
+
+  <!-- 방명록 모달 -->
+  <div id="gbModal" aria-hidden="true">
+    <div class="gb-sheet" role="dialog" aria-modal="true" aria-labelledby="gbTitle">
+      <div class="gb-head">
+        <h3 id="gbTitle">Guestbook</h3>
+        <button class="gb-close" id="gbClose" aria-label="닫기">×</button>
+      </div>
+      <div class="gb-body">
+        <div class="gb-card">
+          <div class="gb-form">
+            <input id="gbName" type="text" placeholder="별명" />
+            <textarea id="gbMsg" placeholder="메시지를 남겨주세요"></textarea>
+            <button id="gbSend" class="gb-send" type="button">등록</button>
+          </div>
+          <div id="gbError" style="color:#b00020;font-size:13px;margin-top:8px;"></div>
+        </div>
+        <div class="gb-list" id="gbList"><div class="gb-empty">방명록을 불러오는 중…</div></div>
+      </div>
     </div>
   </div>
+
+  <!-- 미디어 모달(모바일용) -->
+  <div id="mediaModal" aria-hidden="true">
+    <div class="media-sheet" role="dialog" aria-modal="true" aria-labelledby="mediaTitle">
+      <div class="media-head">
+        <h3 id="mediaTitle">미디어</h3>
+        <button class="media-close" id="mediaClose" aria-label="닫기">×</button>
+      </div>
+      <div class="media-body" id="mediaBody">
+        <!-- 카드 클릭 시 슬라이더가 여기에 렌더링됩니다 -->
+      </div>
+    </div>
+  </div>
+
 <script>
-const isMobile = () => window.matchMedia('(max-width:900px)').matches;
-const $media = document.getElementById('media');
-const $mediaModal = document.getElementById('mediaModal');
-const $mediaModalContent = document.getElementById('mediaModalContent');
-const $mediaModalInner = document.getElementById('mediaModalInner');
-const $mediaModalClose = document.getElementById('mediaModalClose');
+/* ===== GAS 웹앱 URL ===== */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwHGFDbl6RrXzGDFydtqlBiXM9avl0uOp_uWSpW8DMjVj56mHOSPGG402XM0i8Uw4em/exec';
 
-/* 2. 스크롤 반동 완전 제거 */
-document.body.addEventListener('touchmove', function(e){
-  if(document.body.classList.contains('modal-open')) e.preventDefault();
-}, {passive:false});
+/* ===== 시트 연결 ===== */
+const SHEET_ID     = "1i8VMQ2ZkSEJp9H0Ct9tP-61DF_OF2KJuxb31btuHgSE";
+const POSTS_SHEET  = "Feed";
+const TAGMAP_SHEET = "TagMap";
+const ABOUT_SHEET  = "About";
+const GVIZ_BASE = (sheet) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json` + (sheet? `&sheet=${encodeURIComponent(sheet)}`: "" );
+const GVIZ_POSTS  = GVIZ_BASE(POSTS_SHEET);
+const GVIZ_TAGMAP = GVIZ_BASE(TAGMAP_SHEET);
+const GVIZ_ABOUT  = GVIZ_BASE(ABOUT_SHEET);
 
-/* 3. 카드 클릭 시 모바일은 모달로 미디어 표시 */
-function showMedia($article){
-  let mediaArr = [];
-  try { mediaArr = JSON.parse($article.getAttribute('data-media')||"[]"); }
-  catch { mediaArr = []; }
-  if(!mediaArr.length){
-    if(isMobile()){
-      openMediaModal('<div style="padding:40px;text-align:center;color:#888;font-size:22px;">미디어 없음</div>');
-    }else{
-      $media.innerHTML = `<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚✩‧₊˚ੈ*:ﾟ*｡.⋆·ฺᐝ.∗̥⁺˚</div>`;
-    }
-    return;
+/* ===== 유틸 ===== */
+function cellToUrl(cell){
+  const f = typeof cell?.f === 'string' ? cell.f : "";
+  const h1 = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
+  const h2 = f.match(/HYPERLINK\(\s*'([^']+)'/i);
+  if(h1?.[1]) return h1[1].trim();
+  if(h2?.[1]) return h2[1].trim();
+  const s = String(cell?.v ?? cell?.f ?? "").trim();
+  const m = s.match(/https?:\/\/[^\s)"><]+/);
+  if(m?.[0]) return m[0];
+  return s;
+}
+function cellToUrls(cell){
+  const text = String(cell?.f ?? cell?.v ?? "").trim();
+  const out = [];
+  const re = /https?:\/\/[^\s)"><]+/g;
+  let m; while ((m = re.exec(text)) !== null) out.push(m[0]);
+  if (!out.length){
+    text.split(/[,，\n\r]+/).forEach(p=>{
+      const hit = p.match(/https?:\/\/[^\s)"><]+/);
+      if(hit) out.push(hit[0]);
+    });
   }
-  let idx = 0;
-  function renderSlide(i){
-    const urlRaw = mediaArr[i];
-    let html = "";
-    // ...미디어 렌더링 로직 동일...
-    html = `<img src="${urlRaw}" style="max-width:100%;height:auto;display:block" />`;
-    // 실제 구현에서는 이미지/영상/유튜브/드라이브 등 분기 필요
-    if(isMobile()){
-      openMediaModal(`
-        <div class="media-slider">
-          <div class="media-slide">${html}</div>
-          <div class="media-indicator">
-            ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
+  return out;
+}
+
+/* ===== 시트 파서 ===== */
+const headerMap = {
+  id:['id','아이디'], title:['title','제목'], body:['body','본문','내용','content'],
+  tags:['tags','태그'], likes:['likes','좋아요','like'], date:['date','날짜','일자'],
+  published:['published','공개','노출','게시'], media:['media','이미지','영상','미디어','image','video','url']
+};
+function parseGviz(text){
+  const json = JSON.parse(text.substring(47).slice(0,-2));
+  const labels = json.table.cols.map(c=>String(c.label||'').toLowerCase().trim());
+  const find = (aliases)=> labels.findIndex(l=>aliases.includes(l));
+  const idx = {
+    id:find(headerMap.id), title:find(headerMap.title), body:find(headerMap.body),
+    tags:find(headerMap.tags), likes:find(headerMap.likes), date:find(headerMap.date),
+    published:find(headerMap.published), media:find(headerMap.media)
+  };
+  const rows = json.table.rows.map(r=>{
+    const get = i => (i===-1? null : r.c[i]);
+    const pubRaw = (get(idx.published)?.f ?? get(idx.published)?.v);
+    const published = (idx.published===-1) ? true
+      : (String(pubRaw).toLowerCase()==="true" || pubRaw===true);
+    return {
+      id:String(get(idx.id)?.v ?? get(idx.id)?.f ?? "").trim(),
+      title:String(get(idx.title)?.v ?? get(idx.title)?.f ?? "").trim(),
+      body:String(get(idx.body)?.v ?? get(idx.body)?.f ?? "").trim(),
+      tags:String(get(idx.tags)?.v ?? get(idx.tags)?.f ?? "").split(",").map(s=>s.trim()).filter(Boolean),
+      likes:Number(get(idx.likes)?.v ?? get(idx.likes)?.f ?? 0),
+      date:String(get(idx.date)?.v ?? get(idx.date)?.f ?? "").trim(),
+      media: cellToUrls(get(idx.media)),
+      published
+    };
+  });
+  return rows.filter(r=>r.published && r.title);
+}
+
+/* ===== TagMap ===== */
+const norm = s=>String(s||'').toLowerCase().replace(/[\s_\-\/]+/g,'');
+const TAGMAP_ALIAS = {
+  tag: new Set(['tag','tags','태그','name','label'].map(norm)),
+  img: new Set(['imageurl','image','url','이미지','링크','이미지url','이미지사진','photo','icon'].map(norm))
+};
+function parseTagMap(text){
+  const json = JSON.parse(text.substring(47).slice(0,-2));
+  const labels = json.table.cols.map(c=>norm(c.label));
+  let colTag = labels.findIndex(l=> TAGMAP_ALIAS.tag.has(l));
+  let colImg = labels.findIndex(l=> TAGMAP_ALIAS.img.has(l));
+  if(colTag === -1) colTag = 0;
+  if(colImg === -1) colImg = 1;
+  const map = new Map();
+  json.table.rows.forEach(r=>{
+    const t = (r.c[colTag]?.v ?? r.c[colTag]?.f ?? "").toString().trim();
+    const u = cellToUrl(r.c[colImg]);
+    if(t && u){ map.set(t.toLowerCase(), u); }
+  });
+  return map;
+}
+
+/* ===== 정렬 ===== */
+function dateKey(s){ const d=String(s||'').replace(/[^0-9]/g,''); return d ? d.padEnd(14,'0').slice(0,14) : '' }
+function idNum(id){ const m=String(id||'').match(/(\d+)/g); return m? Number(m[m.length-1]) : null }
+function comparePosts(a,b){
+  const da=dateKey(a.date), db=dateKey(b.date);
+  if(da!==db) return db.localeCompare(da);
+  const ia=idNum(a.id), ib=idNum(b.id);
+  if(ia!=null && ib!=null) return ib-ia;
+  if(ia!=null) return -1; if(ib!=null) return 1;
+  return String(b.id||'').localeCompare(String(a.id||''));
+}
+
+/* ===== 미디어 유틸 ===== */
+function extractGoogleIdAndType(url){
+  const m = url.match(/https?:\/\/(?:drive|docs)\.google\.com\/(file|document|presentation|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return {kind:m[1], id:m[2]};
+  const m2 = url.match(/[?&](?:id|ids)=([a-zA-Z0-9_-]+)/);
+  if(m2) return {kind:'file', id:m2[1]};
+  const m3 = url.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+  if(m3) return {kind:'file', id:m3[1]};
+  return {kind:null,id:null};
+}
+function normalizeMediaUrl(raw){
+  const url = String(raw||'').trim();
+  if(!url) return '';
+  const {kind,id} = extractGoogleIdAndType(url);
+  if(kind==='file' && id) return `https://drive.google.com/uc?export=view&id=${id}`;
+  return url;
+}
+function drivePreviewUrl(u){
+  const {kind,id} = extractGoogleIdAndType(u);
+  if(!id) return u;
+  if(kind==='document') return `https://docs.google.com/document/d/${id}/preview`;
+  if(kind==='presentation') return `https://docs.google.com/presentation/d/${id}/preview`;
+  if(kind==='spreadsheets') return `https://docs.google.com/spreadsheets/d/${id}/preview`;
+  return `https://drive.google.com/file/d/${id}/preview`;
+}
+const isYouTube = u => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(u);
+const isVideo   = u => /\.(mp4|webm|ogg)(\?.*)?$/i.test(u);
+const isImage   = u => /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(u);
+const isGoogle  = u => /https?:\/\/(?:drive|docs)\.google\.com/i.test(u);
+const isDriveUC = u => /https?:\/\/drive\.google\.com\/uc\?/i.test(u);
+function fallbackToPreview(img, rawUrl){
+  const host = img.closest('.media-slide') || img.parentElement;
+  if(!host) return;
+  const iframe = document.createElement('iframe');
+  iframe.src = drivePreviewUrl(rawUrl);
+  iframe.style.cssText='width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff';
+  host.innerHTML=''; host.appendChild(iframe);
+}
+
+/* ===== DOM ===== */
+const $list = document.getElementById('list');
+const $media = document.getElementById('media');
+const $stories = document.getElementById('storyBar');
+const aboutBtnEl = document.getElementById('aboutBtn');
+
+/* Guestbook DOM */
+const $gbModal = document.getElementById('gbModal');
+const $gbFab   = document.getElementById('gbFab');
+const $gbClose = document.getElementById('gbClose');
+const $gbName  = document.getElementById('gbName');
+const $gbMsg   = document.getElementById('gbMsg');
+const $gbSend  = document.getElementById('gbSend');
+const $gbList  = document.getElementById('gbList');
+const $gbErr   = document.getElementById('gbError');
+
+/* Media Modal DOM (모바일) */
+const $mediaModal = document.getElementById('mediaModal');
+const $mediaClose = document.getElementById('mediaClose');
+const $mediaBody  = document.getElementById('mediaBody');
+
+let TAGMAP = new Map();
+let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
+
+const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+/* ===== 렌더링 ===== */
+function formatKDate(s){ const m=String(s||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
+function groupByDate(posts){
+  const map = new Map();
+  posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
+  return Array.from(map.entries()).sort((a,b)=> dateKey(b[0]).localeCompare(dateKey(a[0])));
+}
+function render(posts){
+  if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
+  const groups = groupByDate(posts);
+  $list.innerHTML = groups.map(([date, items])=>{
+    const cards = items.map(p=>{
+      const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+      const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
+      return `
+        <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}">
+          <h2>${p.title}</h2>
+          <div class="meta">
+            <button class="pill like" type="button" data-like="${pid}">
+              좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+            </button>
+            <span class="pills">${tags}</span>
           </div>
-          ${mediaArr.length>1 ? `
-            <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전">&#10094;</button>
-            <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음">&#10095;</button>
-          ` : ''}
-        </div>
-      `);
-      $mediaModalInner.querySelectorAll('.media-dot').forEach(dot=>{
-        dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
-      });
-      $mediaModalInner.querySelector('.media-nav.prev')?.addEventListener('click', ()=>{ if(idx>0){ idx--; renderSlide(idx); } });
-      $mediaModalInner.querySelector('.media-nav.next')?.addEventListener('click', ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } });
-    }else{
-      $media.innerHTML = `
-        <div class="media-slider">
-          <div class="media-slide">${html}</div>
-          <div class="media-indicator">
-            ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
-          </div>
-          ${mediaArr.length>1 ? `
-            <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전">&#10094;</button>
-            <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음">&#10095;</button>
-          ` : ''}
-        </div>
+          <div class="content">${p.body}</div>
+        </article>
       `;
-      $media.querySelectorAll('.media-dot').forEach(dot=>{
-        dot.onclick = ()=>{ idx = Number(dot.getAttribute('data-idx')); renderSlide(idx); };
-      });
-      $media.querySelector('.media-nav.prev')?.addEventListener('click', ()=>{ if(idx>0){ idx--; renderSlide(idx); } });
-      $media.querySelector('.media-nav.next')?.addEventListener('click', ()=>{ if(idx<mediaArr.length-1){ idx++; renderSlide(idx); } });
+    }).join("");
+    return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
+  }).join("");
+}
+function renderStories(allTags){
+  const tags = ['전체', ...Array.from(allTags).sort()];
+  $stories.innerHTML = tags.map(t=>{
+    const key=t.toLowerCase(); const img=TAGMAP.get(key);
+    const imgAttr = img ? `data-img="1" style="--img:url('${img}')"` : "";
+    return `<button class="story" data-filter="${t}" data-label="${t}" ${imgAttr} aria-label="${t}"><span class="sr-only">${t}</span></button>`;
+  }).join('');
+  const first = $stories.querySelector('[data-filter="전체"]'); if(first) first.classList.add('active');
+
+  $stories.querySelectorAll('.story').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tag = btn.getAttribute('data-filter');
+      applyTagFilter(tag==='전체'? null : tag);
+    });
+  });
+}
+function applyTagFilter(tag){
+  document.querySelectorAll('#list article.card').forEach(a=>{
+    const tags=a.getAttribute('data-tags').split(',').filter(Boolean);
+    a.style.display = (!tag || tags.includes(tag)) ? '' : 'none';
+  });
+  document.querySelectorAll('#list .group').forEach(g=>{
+    const any = Array.from(g.querySelectorAll('article.card')).some(a=>a.style.display!=='none');
+    g.style.display = any ? '' : 'none';
+  });
+}
+
+/* ===== 미디어 슬라이더 렌더 함수(공용) ===== */
+function renderMediaInto(containerEl, mediaArr, startIndex=0){
+  let idx = startIndex;
+  function renderSlide(i){
+    const raw = mediaArr[i]; let url = normalizeMediaUrl(raw); let html='';
+    if(isYouTube(url)){
+      const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || "";
+      html = `<iframe width="100%" height="100%" style="aspect-ratio:16/9;border:0"
+        src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>`;
+    }else if(isVideo(url)){
+      html = `<video controls playsinline style="width:100%;height:auto" src="${url}"></video>`;
+    }else if(isImage(url) || isDriveUC(url)){
+      const safe = url.replace(/'/g,"\\'");
+      html = `<img src="${url}" alt="" style="max-width:100%;height:auto;display:block" onerror="fallbackToPreview(this,'${safe}')">`;
+    }else if(isGoogle(url)){
+      html = `<iframe src="${drivePreviewUrl(url)}" style="width:100%;height:clamp(420px,80vh,1200px);border:0;background:#fff"></iframe>`;
+    }else{
+      html = `<iframe width="100%" style="height:clamp(360px,70vh,1000px);border:0" src="${url}"></iframe>`;
     }
+    containerEl.innerHTML = `
+      <div class="media-slider">
+        <div class="media-slide">${html}</div>
+        <div class="media-indicator">
+          ${mediaArr.map((_,j)=>`<span class="media-dot${j===i?' active':''}" data-idx="${j}"></span>`).join("")}
+        </div>
+        ${mediaArr.length>1?`
+          <button class="media-nav prev" ${i===0?'disabled':''} aria-label="이전">&#10094;</button>
+          <button class="media-nav next" ${i===mediaArr.length-1?'disabled':''} aria-label="다음">&#10095;</button>`:''}
+      </div>`;
+    containerEl.querySelectorAll('.media-dot').forEach(dot=>{
+      dot.onclick=()=>{ idx=Number(dot.getAttribute('data-idx')); renderSlide(idx); };
+    });
+    const prevBtn=containerEl.querySelector('.media-nav.prev'), nextBtn=containerEl.querySelector('.media-nav.next');
+    if(prevBtn) prevBtn.onclick=()=>{ if(idx>0){idx--; renderSlide(idx);} };
+    if(nextBtn) nextBtn.onclick=()=>{ if(idx<mediaArr.length-1){idx++; renderSlide(idx);} };
   }
   renderSlide(idx);
 }
-function openMediaModal(html){
-  $mediaModalInner.innerHTML = html;
+
+/* 데스크톱: 우측 패널에 렌더 */
+function showMediaDesktop(mediaArr){
+  if(!mediaArr?.length){ $media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚</div>'; return; }
+  renderMediaInto($media, mediaArr, 0);
+}
+/* 모바일: 모달로 렌더 */
+function showMediaMobile(mediaArr){
+  if(!mediaArr?.length){ return; }
+  renderMediaInto($mediaBody, mediaArr, 0);
   $mediaModal.classList.add('open');
-  document.body.classList.add('modal-open');
 }
-function closeMediaModal(){
-  $mediaModal.classList.remove('open');
-  document.body.classList.remove('modal-open');
-  $mediaModalInner.innerHTML = '';
-}
-$mediaModalClose.addEventListener('click', closeMediaModal);
-$mediaModal.addEventListener('click', e=>{
-  if(e.target === $mediaModal) closeMediaModal();
-});
-document.addEventListener('keydown', e=>{
-  if(e.key === 'Escape' && $mediaModal.classList.contains('open')) closeMediaModal();
+document.getElementById('mediaClose').addEventListener('click', ()=> $mediaModal.classList.remove('open'));
+$mediaModal.addEventListener('click', (e)=>{ if(e.target===$mediaModal) $mediaModal.classList.remove('open'); });
+
+/* 카드/좋아요/미디어 */
+document.addEventListener('click', e=>{
+  const likeBtn=e.target.closest('.like[data-like]');
+  if(likeBtn){
+    e.stopPropagation();
+    const id=likeBtn.getAttribute('data-like');
+    const label=document.getElementById(`like-${id}`);
+    const prev=Number(label?.textContent||0);
+    if(label) label.textContent=String(prev+1); // (서버 합산 필요 시 좋아요 API 연동)
+    return;
+  }
+  const card=e.target.closest('article.card');
+  if(card){
+    let mediaArr=[]; try{ mediaArr = JSON.parse(card.getAttribute('data-media')||'[]'); }catch{ mediaArr=[]; }
+    if(isMobile()) showMediaMobile(mediaArr); else showMediaDesktop(mediaArr);
+  }
 });
 
-/* 카드 클릭 이벤트 연결 예시 */
-document.addEventListener('click', e=>{
-  const card = e.target.closest('article.card');
-  if(card) showMedia(card);
+/* About 버튼 (닫기 X 포함) */
+aboutBtnEl.addEventListener('click', ()=>{
+  $media.innerHTML = `
+    <div style="position:relative;background:#fff;color:#222;border-radius:16px;max-width:700px;width:100%;padding:28px 24px;white-space:pre-line">
+      <button id="aboutClose" style="position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:22px;cursor:pointer" aria-label="닫기">×</button>
+      ${ABOUT_TEXT}
+    </div>`;
+  const x=$media.querySelector('#aboutClose'); x&& (x.onclick=()=>{$media.innerHTML='<div class="placeholder">‧₊˚.⋆·ฺ.∗̥✩⁺˚</div>';});
 });
+
+/* ===== 방명록: 모달 열기/닫기 & 통신 ===== */
+function openGuestbook(){
+  $gbModal.classList.add('open');
+  $gbName.focus();
+  loadGuestbook(1,30);
+}
+function closeGuestbook(){ $gbModal.classList.remove('open'); }
+$gbFab.addEventListener('click', openGuestbook);
+$gbClose.addEventListener('click', closeGuestbook);
+$gbModal.addEventListener('click', (e)=>{ if(e.target===$gbModal) closeGuestbook(); });
+
+async function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb='__gb_cb_'+Date.now();
+    window[cb]=(data)=>{ resolve(data); cleanup(); };
+    const s=document.createElement('script');
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    s.onerror=()=>{ cleanup(); reject(new Error('jsonp failed')); };
+    document.head.appendChild(s);
+    function cleanup(){ delete window[cb]; s.remove(); }
+  });
+}
+async function loadGuestbook(page=1, pageSize=30){
+  $gbErr.textContent='';
+  $gbList.innerHTML = `<div class="gb-empty">방명록을 불러오는 중…</div>`;
+  try{
+    const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
+    let data;
+    try{
+      const r = await fetch(url);           // CORS 허용 시
+      if(!r.ok) throw new Error('http');
+      data = await r.json();
+    }catch{
+      data = await jsonp(url);              // JSONP 폴백
+    }
+    if(!data.ok) throw new Error(data.error||'load failed');
+    renderGuestbook(data.data||[]);
+  }catch(err){
+    $gbList.innerHTML = `<div class="gb-empty">불러오기 실패: ${String(err.message||err)}</div>`;
+  }
+}
+function renderGuestbook(rows){
+  if(!rows.length){ $gbList.innerHTML='<div class="gb-empty">첫 방명록을 남겨보세요 ✍️</div>'; return; }
+  const esc = (s)=>String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  $gbList.innerHTML = rows.map(r=>{
+    const who = (r.name||'익명') + ' · ' + (r.createdAt? new Date(r.createdAt).toLocaleString() : '');
+    return `<div class="gb-item"><div class="who">${esc(who)}</div><div class="msg">${esc(r.message||'')}</div></div>`;
+  }).join('');
+}
+$gbSend.addEventListener('click', async ()=>{
+  $gbErr.textContent='';
+  const name = $gbName.value.trim();
+  const message = $gbMsg.value.trim();
+  if(!message){ $gbErr.textContent='메시지를 입력해 주세요.'; $gbMsg.focus(); return; }
+  try{
+    $gbSend.disabled = true; $gbSend.textContent = '등록 중…';
+    const body = new URLSearchParams({ action:'addGuestbook', name, message }).toString();
+    const r = await fetch(WEB_APP_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+      body
+    });
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error||'등록 실패');
+    $gbMsg.value=''; await loadGuestbook(1, 30);
+  }catch(err){ $gbErr.textContent = '등록 실패: ' + String(err.message||err); }
+  finally{ $gbSend.disabled = false; $gbSend.textContent = '등록'; }
+});
+
+/* ===== 초기 로드 ===== */
+(async function(){
+  try{
+    const [rPosts,rTag,rAbout] = await Promise.all([
+      fetch(GVIZ_POSTS),
+      fetch(GVIZ_TAGMAP).catch(()=>null),
+      fetch(GVIZ_ABOUT).catch(()=>null)
+    ]);
+    if(!rPosts?.ok) throw new Error(`POSTS HTTP ${rPosts?.status}`);
+    const [textPosts,textTag,textAbout] = await Promise.all([
+      rPosts.text(),
+      rTag && rTag.ok ? rTag.text() : Promise.resolve(null),
+      rAbout && rAbout.ok ? rAbout.text() : Promise.resolve(null)
+    ]);
+    const rows = parseGviz(textPosts).sort(comparePosts);
+    TAGMAP = textTag ? parseTagMap(textTag) : new Map();
+    if (textAbout){
+      try{ const j=JSON.parse(textAbout.substring(47).slice(0,-2)); const c=j.table.rows[0]?.c[0]; ABOUT_TEXT = c?.v||c?.f||ABOUT_TEXT; }catch{}
+    }
+    render(rows);
+    renderStories(new Set(rows.flatMap(r=>r.tags)));
+  }catch(err){
+    $list.innerHTML = `<div style="color:#6b7280">시트를 불러오지 못했습니다. (웹에 게시/탭/헤더 확인) <br><small>${String(err)}</small></div>`;
+    console.error(err);
+  }
+})();
 </script>
 </body>
 </html>

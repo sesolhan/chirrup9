@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>chirrup9</title>
 
 <!-- 네트워크 프리커넥트 -->
@@ -40,7 +41,6 @@
   body{ margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-sans);overflow-x:hidden; }
 
   .stage{
-    /* 100vw → 100% (모바일 스크롤바 폭 포함 문제 방지) */
     width:100%;
     display:grid;gap:0;margin:0;padding:0;max-width:none;
     grid-template-columns:minmax(360px,560px) 1fr; align-items:start;

@@ -499,7 +499,7 @@
   function cardHTML(p, pinned){
     const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
     const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
-    const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">➶</span>` : "";
+    const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">공지</span>` : "";
     return `
       <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}" data-pinned="${pinned?1:0}">
         <h2>${p.title}</h2>
@@ -526,7 +526,7 @@
 
     const pinnedSection = pinned.length ? `
       <section class="group" data-pinned="1">
-        <div class="date">➶</div>
+        <div class="date">공지</div>
         ${pinned.map(p=>cardHTML(p, true)).join("")}
       </section>` : "";
 

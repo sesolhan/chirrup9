@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://docs.google.com" crossorigin>
 <link rel="preconnect" href="https://drive.google.com" crossorigin>
 <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+<link rel="preconnect" href="https://script.google.com" crossorigin>
 
 <style>
   /* 웹폰트 */
@@ -102,6 +103,7 @@
   .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px dashed var(--chip-border);color:var(--chip-border);background:#e6e6e6}
   .pill.pin{border-style:solid}
   .like.pill{cursor:pointer;transition:color .15s,border-color .15s}
+  .like.pill{ font-family: var(--font-sans); }
   .like.pill:hover,.like.pill:focus-visible{color:var(--accent);border-color:var(--accent)}
   .pills .pill{pointer-events:none}
   .content{margin-top:8px;white-space:pre-wrap;line-height:1.55;color:#1f2937; overflow-wrap:anywhere; word-break:break-word;}
@@ -319,6 +321,8 @@
 
   let TAGMAP = new Map();
   let ABOUT_TEXT = "About 정보를 불러오지 못했습니다.";
+  // 방명록 메모리 캐시 (TTL: 2분)
+  let GB_CACHE = { t:0, data: [] };
   const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
   /* ===== JSONP 공용 ===== */
@@ -346,6 +350,13 @@
   }
   function saveLikesCache(map){
     try{ localStorage.setItem(LIKE_CACHE_KEY, JSON.stringify({t:Date.now(), m:map})); }catch{}
+  }
+
+  /* ===== 네트워크 유틸 ===== */
+  async function fetchJSON(url, init){
+    const r = await fetch(url, init);
+    if(!r.ok) throw new Error('http');
+    return await r.json();
   }
 
   /* ===== 좋아요 API ===== */
@@ -716,7 +727,14 @@
   function openGuestbook(){
     $gbModal.classList.add('open');
     $gbName.focus();
-    loadGuestbook(1,30);
+    // 캐시가 있으면 즉시 렌더 후 백그라운드 새로고침
+    const cached = (Date.now()-GB_CACHE.t < 2*60*1000) ? GB_CACHE.data : null;
+    if(cached && Array.isArray(cached)){
+      renderGuestbook(cached);
+      loadGuestbook(1,30);
+    }else{
+      loadGuestbook(1,30);
+    }
   }
   function closeGuestbook(){ $gbModal.classList.remove('open'); }
   $gbFab.addEventListener('click', openGuestbook);
@@ -728,16 +746,15 @@
     $gbList.innerHTML = `<div class="gb-empty">방명록을 불러오는 중…</div>`;
     try{
       const url = `${WEB_APP_URL}?action=listGuestbook&page=${page}&pageSize=${pageSize}`;
-      let data;
-      try{
-        const r = await fetch(url);
-        if(!r.ok) throw new Error('http');
-        data = await r.json();
-      }catch{
-        data = await jsonp(url);
-      }
+      // fetch와 JSONP를 동시에 시도, 먼저 성공하는 것을 사용
+      const data = await Promise.any([
+        fetchJSON(url),
+        jsonp(url)
+      ]);
       if(!data.ok) throw new Error(data.error||'load failed');
-      renderGuestbook(data.data||[]);
+      const rows = data.data||[];
+      GB_CACHE = { t:Date.now(), data: rows };
+      renderGuestbook(rows);
     }catch(err){
       $gbList.innerHTML = `<div class="gb-empty">불러오기 실패: ${String(err.message||err)}</div>`;
     }
@@ -851,6 +868,15 @@
               ABOUT_TEXT = c?.v||c?.f||ABOUT_TEXT;
             }catch{}
           }
+          // 방명록 사전 예열 (작은 페이지 사이즈)
+          try{
+            const url = `${WEB_APP_URL}?action=listGuestbook&page=1&pageSize=20`;
+            const data = await Promise.any([
+              fetchJSON(url),
+              jsonp(url)
+            ]);
+            if(data && data.ok){ GB_CACHE = { t:Date.now(), data: data.data||[] }; }
+          }catch{}
         }catch{}
       });
 

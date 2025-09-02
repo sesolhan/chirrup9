@@ -120,7 +120,12 @@
     border-radius:16px;overflow:hidden;
   }
   .media-slide{width:100%;height:auto;display:flex;align-items:center;justify-content:center;position:relative}
-  .media-slide > img,
+  .media-slide > img{
+    background:transparent;
+    display:block; max-width:100%; height:auto;
+    max-height:clamp(360px, calc(var(--vh)*0.8), 1000px);
+    object-fit:contain;
+  }
   .media-slide > video,
   .media-slide > iframe{
     background:transparent;

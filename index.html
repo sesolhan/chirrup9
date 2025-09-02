@@ -112,17 +112,16 @@
   .media-slider{
     width:100%;
     max-width:600px;
-    /* min-height 제거 → 이미지 높이에 맞춤 */
     position:relative;
     display:flex;align-items:center;justify-content:center;
-    background:transparent;         /* ✅ 배경색 제거 */
+    background:transparent;         /* 배경색 제거 */
     border-radius:16px;overflow:hidden;
   }
   .media-slide{width:100%;height:auto;display:flex;align-items:center;justify-content:center;position:relative}
   .media-slide > img,
   .media-slide > video,
   .media-slide > iframe{
-    background:transparent;         /* ✅ 내부 배경 제거 */
+    background:transparent;
     display:block; max-width:100%; height:auto;
   }
 
@@ -447,7 +446,6 @@
     return String(b.id||'').localeCompare(String(a.id||''));
   }
   function formatKDate(s){ const m=String(s||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/); return m? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : (s||'날짜'); }
-
   const PIN_TAGS = new Set(['pin','고정','pinned','상단고정']);
   function hasPinTag(p){
     return p.tags.some(t=>{
@@ -473,8 +471,94 @@
     }
     return true;
   }
-  function pinWeight(p){
-    return p.pinOrder || extractTagWeight(p) || 0;
+  function pinWeight(p){ return p.pinOrder || extractTagWeight(p) || 0; }
+
+  /* ===== [복원] 렌더링: 카드/그룹/스토리 ===== */
+  function groupByDate(posts){
+    const map = new Map();
+    posts.forEach(p=>{ const k=p.date||'날짜'; if(!map.has(k)) map.set(k,[]); map.get(k).push(p); });
+    return Array.from(map.entries()).sort((a,b)=> (String(b[0]).replace(/\D/g,'')||'').localeCompare(String(a[0]).replace(/\D/g,'')));
+  }
+  function cardHTML(p, pinned){
+    const pid = p.id || `post-${Math.random().toString(36).slice(2)}`;
+    const tags = p.tags.map(t=>`<span class="pill">#${t}</span>`).join("");
+    const pinBadge = pinned ? `<span class="pill pin" aria-label="상단 고정">➶</span>` : "";
+    return `
+      <article class="card" data-id="${pid}" data-media='${JSON.stringify(p.media)}' data-tags="${p.tags.join(',')}" data-pinned="${pinned?1:0}">
+        <h2>${p.title}</h2>
+        <div class="meta">
+          ${pinBadge}
+          <button class="pill like" type="button" data-like="${pid}">
+            좋아요 <span id="like-${pid}">${p.likes ?? 0}</span>
+          </button>
+          <span class="pills">${tags}</span>
+        </div>
+        <div class="content">${p.body}</div>
+      </article>`;
+  }
+  function render(posts){
+    if(!posts.length){ $list.innerHTML='<div style="color:#6b7280">게시물이 없습니다.</div>'; return; }
+
+    const pinned = [], normal = [];
+    posts.forEach(p=> (isPinned(p)? pinned: normal).push(p));
+    pinned.sort((a,b)=> {
+      const wa = pinWeight(a), wb = pinWeight(b);
+      if (wa!==wb) return wb-wa;
+      return comparePosts(a,b);
+    });
+
+    const pinnedSection = pinned.length ? `
+      <section class="group" data-pinned="1">
+        <div class="date">➶</div>
+        ${pinned.map(p=>cardHTML(p, true)).join("")}
+      </section>` : "";
+
+    const groups = groupByDate(normal);
+    const normalSection = groups.map(([date, items])=>{
+      const cards = items.map(p=>cardHTML(p,false)).join("");
+      return `<section class="group" data-date="${date}"><div class="date">${formatKDate(date)}</div>${cards}</section>`;
+    }).join("");
+
+    $list.innerHTML = pinnedSection + normalSection;
+  }
+  function renderStories(allTags){
+    const tags = ['전체', ...Array.from(allTags).sort()];
+    $stories.innerHTML = tags.map(t=>{
+      return `<button class="story" data-filter="${t}" data-label="${t}" aria-label="${t}"><span class="sr-only">${t}</span></button>`;
+    }).join('');
+    const first = $stories.querySelector('[data-filter="전체"]'); if(first) first.classList.add('active');
+
+    $stories.querySelectorAll('.story').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        $stories.querySelectorAll('.story').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const tag = btn.getAttribute('data-filter');
+        applyTagFilter(tag==='전체'? null : tag);
+      });
+    });
+
+    applyTagMapToStories();
+  }
+  function applyTagFilter(tag){
+    document.querySelectorAll('#list article.card').forEach(a=>{
+      const tags=a.getAttribute('data-tags').split(',').filter(Boolean);
+      a.style.display = (!tag || tags.includes(tag)) ? '' : 'none';
+    });
+    document.querySelectorAll('#list .group').forEach(g=>{
+      const any = Array.from(g.querySelectorAll('article.card')).some(a=>a.style.display!=='none');
+      g.style.display = any ? '' : 'none';
+    });
+  }
+  function applyTagMapToStories(){
+    if(!TAGMAP || !TAGMAP.size) return;
+    document.querySelectorAll('.story').forEach(btn=>{
+      const t = btn.getAttribute('data-filter');
+      const u = TAGMAP.get(String(t||'').toLowerCase());
+      if(u){
+        btn.dataset.img = "1";
+        btn.style.setProperty('--img', `url('${u}')`);
+      }
+    });
   }
 
   /* ===== Google ID 추출 & URL 유틸 ===== */
@@ -532,7 +616,6 @@
         const safe = url.replace(/'/g,"\\'");
         html = `<img loading="lazy" decoding="async" src="${url}" alt="" style="max-width:100%;height:auto;display:block" onerror="fallbackToPreview(this,'${safe}')">`;
       }else if(isGoogle(url)){
-        /* ✅ Google Drive 파일: 우선 썸네일 이미지로 직접 렌더(검은 배경 없음) */
         const {id} = extractGoogleIdAndType(url);
         if(id){
           const safe = url.replace(/'/g,"\\'");
@@ -545,7 +628,6 @@
                      style="max-width:100%;height:auto;display:block"
                      onerror="fallbackToPreview(this,'${safe}')">`;
         }else{
-          /* ID를 못 찾으면 프리뷰로 */
           html = `<iframe loading="lazy" src="${drivePreviewUrl(url)}" style="width:100%;height:clamp(420px,calc(var(--vh)*0.8),1200px);border:0;background:transparent"></iframe>`;
         }
       }else{
